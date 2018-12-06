@@ -1,0 +1,152 @@
+from os.path import join
+configfile: 'config.yml'
+include: '../Snakefile'
+include: '../signature-visualization/Snakefile'
+wildcard_constraints:
+    cancer_type="[A-Z]+"
+
+SBS96_COUNT_URL = "https://obj.umiacs.umd.edu/mutation-signature-explorer/mutations/PanCanAtlas/processed/counts/counts.TCGA-{cancer_type}_{cancer_type}_mc3.v0.2.8.SBS-96.tsv"
+
+ALL_MUTATION_COUNT_MATRIX_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_all_mutation_count.tsv")
+#RAW_FEATURE_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_raw_clinical.tsv")
+#SAMPLE_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_sample_mapping.tsv")
+ALL_FEATURE_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_all_features.tsv")
+
+VALIDATE_FEATURE_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_mutation_count_validate.tsv")
+VALIDATE_MC_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_clinical_features_validate.tsv")
+
+TEST_FEATURE_FILE=join(OUTPUT_DIR, "features-test_TCGA-{cancer_type}_{fold}.tsv")
+TEST_MC_FILE=join(OUTPUT_DIR, "mutation-count-test_TCGA-{cancer_type}_{fold}.tsv")
+TRAIN_FEATURE_FILE=join(OUTPUT_DIR, "features-train_TCGA-{cancer_type}_{fold}.tsv")
+TRAIN_MC_FILE=join(OUTPUT_DIR, "mutation-count-train_TCGA-{cancer_type}_{fold}.tsv")
+
+PANCAN_TEST_FEATURE_FILE=join(OUTPUT_DIR, "features-test_TCGAPanCan_{fold}.tsv")
+PANCAN_TEST_MC_FILE=join(OUTPUT_DIR, "mutation-count-test_TCGAPanCan_{fold}.tsv")
+PANCAN_TRAIN_FEATURE_FILE=join(OUTPUT_DIR, "features-train_TCGAPanCan_{fold}.tsv")
+PANCAN_TRAIN_MC_FILE=join(OUTPUT_DIR, "mutation-count-train_TCGAPanCan_{fold}.tsv")
+
+MC_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_mutation_count.tsv")
+PANCAN_MC_FILE=join(OUTPUT_DIR, "TCGAPanCan_mutation_count.tsv")
+FEATURE_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_features.tsv")
+PANCAN_FEATURE_FILE=join(OUTPUT_DIR, "TCGAPanCan_features.tsv")
+STM_HELDOUT_LIKELIHOOD_FILE=join(OUTPUT_DIR, 'stm-heldout-likelihood_{covariates}_{K}_TCGAPanCan_{fold}.tsv')
+STM_COMBINED_HELDOUT_LIKELIHOOD_FILE=join(OUTPUT_DIR, 'stm-combined-heldout_{covariates}_TCGAPanCan.tsv')
+LIKELIHOOD_PLOT=join(OUTPUT_DIR,'likelihood-plot_{covariates1}_{covariates2}_TCGAPanCan.pdf')
+STM_SIGNATURES_FILE=join(OUTPUT_DIR, 'stm-signatures_{covariates}_{K}_{project}.tsv')
+# PARAMETERS
+seed="123456"
+N_FOLDS=5
+FOLDS=range(0, N_FOLDS)
+
+CANCER_TYPES=config["Cancer-Types"]
+
+MIN_K=2
+MAX_K=15
+K_RANGE=range(MIN_K, MAX_K+1)
+
+rule all:
+    input:
+        expand(SIG_COSINE_PLOT, covariates="+".join(CANCER_TYPES), K=10, project="TCGAPanCan")
+
+
+rule combine_stm_heldout_likelihood_files:
+    input:
+        expand(STM_HELDOUT_LIKELIHOOD_FILE, K = K_RANGE, fold=FOLDS, covariates="{covariates}")
+    output:
+        STM_COMBINED_HELDOUT_LIKELIHOOD_FILE
+    script:
+        "../src/combine_heldout_likelihood_files.py"
+
+rule combine_train_mc_file:
+    input:
+        expand(TRAIN_MC_FILE, cancer_type=CANCER_TYPES, fold="{fold}")
+    output:
+        PANCAN_TRAIN_MC_FILE
+    script:
+        "src/combine_cancer_specific_files.py"
+
+rule combine_test_mc_file:
+    input:
+        expand(TEST_MC_FILE, cancer_type=CANCER_TYPES, fold="{fold}")
+    output:
+        PANCAN_TEST_MC_FILE
+    script:
+        "src/combine_cancer_specific_files.py"
+
+rule combine_train_feature_file:
+    input:
+        expand(TRAIN_FEATURE_FILE, cancer_type=CANCER_TYPES, fold="{fold}")
+    output:
+        PANCAN_TRAIN_FEATURE_FILE
+    script:
+        "src/combine_cancer_specific_files.py"
+
+rule combine_test_feature_file:
+    input:
+        expand(TEST_FEATURE_FILE, cancer_type=CANCER_TYPES, fold="{fold}")
+    output:
+        PANCAN_TEST_FEATURE_FILE
+    script:
+        "src/combine_cancer_specific_files.py"
+
+rule combine_feature_files:
+    input:
+        expand(FEATURE_FILE, cancer_type=CANCER_TYPES)
+    output:
+        PANCAN_FEATURE_FILE
+    script:
+        "src/combine_cancer_specific_files.py"
+
+rule combine_mutation_count_files:
+    input:
+        expand(MC_FILE, cancer_type=CANCER_TYPES)
+    output:
+        PANCAN_MC_FILE
+    script:
+        "src/combine_cancer_specific_files.py"
+
+rule split_test_training_data:
+    input:
+        MC_FILE,
+        FEATURE_FILE
+    params:
+        seed=seed,
+        n_folds=N_FOLDS
+    output:
+        TEST_MC_FILE,
+        TRAIN_MC_FILE,
+        TEST_FEATURE_FILE,
+        TRAIN_FEATURE_FILE
+    script:
+        "../src/split_test_training_data.py"
+
+rule split_validate_training:
+    input:
+        ALL_MUTATION_COUNT_MATRIX_FILE,
+        ALL_FEATURE_FILE
+    params:
+        seed=seed
+    output:
+        VALIDATE_MC_FILE,
+        MC_FILE,
+        VALIDATE_FEATURE_FILE,
+        FEATURE_FILE
+    script:
+        "../src/split_training_validate_data.py"
+
+rule create_feature_file:
+    input:
+        ALL_MUTATION_COUNT_MATRIX_FILE
+    output:
+        ALL_FEATURE_FILE
+    script:
+        "src/create_feature_file.py"
+
+
+rule download_sbs_count_data:
+    params:
+        SBS96_COUNT_URL
+    output:
+        ALL_MUTATION_COUNT_MATRIX_FILE
+    shell:
+        "wget -O {output} {params}"
