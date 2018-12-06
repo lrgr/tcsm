@@ -1,0 +1,29 @@
+
+COSMIC_DIR = 'COSMIC'
+
+# Files
+RAW_COSMIC_SIGNATURES = join(COSMIC_DIR, 'raw-cosmic-signatures.tsv')
+COSMIC_SIGNATURES = join(COSMIC_DIR, 'cosmic-signatures.tsv')
+STM_SIGNATURES_FILE=join(OUTPUT_DIR, 'stm-signatures_{covariates}_{K}_{project}.tsv')
+SIG_COSINE_PLOT=join(OUTPUT_DIR, "stm-cosine-similarity_{covariates}_{K}_{project}.pdf")
+SIG_COSINE_SIM=join(OUTPUT_DIR, "stm-cosine-similarity_{covariates}_{K}_{project}.tsv")
+
+rule calculate_cosine_similarity:
+    input:
+        COSMIC_SIGNATURES,
+        STM_SIGNATURES_FILE
+    output:
+        SIG_COSINE_PLOT,
+        SIG_COSINE_SIM
+    script:
+        "src/plot_cosine_similarity.py"
+
+
+
+rule download_cosmic_signatures:
+    params:
+        url='https://obj.umiacs.umd.edu/mutation-signature-explorer/signatures/COSMIC/processed/cosmic-signatures.SBS-96.tsv'
+    output:
+        COSMIC_SIGNATURES
+    shell:
+        'wget -O {output} {params.url}'
