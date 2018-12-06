@@ -1,0 +1,18 @@
+Cancer-Types:
+  - BRCA
+  - GBM
+  - OV
+  - LUAD
+  - UCEC
+  - KIRC
+  - HNSC
+  - LGG
+  - THCA
+  - LUSC
+  - PRAD
+  - SKCM
+  - COAD
+  - STAD
+  - LAML
+  - ESCA
+  - PAAD 
