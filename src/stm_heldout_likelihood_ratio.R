@@ -18,7 +18,6 @@ test.mutation.count.file <- snakemake@input[[2]]
 train.feature.file <- snakemake@input[[3]]
 test.feature.file <- snakemake@input[[4]]
 seed <- strtoi(snakemake@params[[1]])
-covariate.formula <- as.formula(paste0("~", snakemake@wildcards[["covariates"]]))
 K <- strtoi(snakemake@wildcards[["K"]])
 heldout.ratio.file <- snakemake@output[[1]]
 

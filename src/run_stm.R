@@ -7,8 +7,9 @@ run.stm <- function(mutation.count.file, feature.file, covariates, K, seed, expo
   corpus <- readCorpus(mat, type="dtm")
   prep <- prepDocuments(corpus$documents, corpus$vocab)
   feature.data <- read.delim(feature.file, sep = '\t', header = TRUE, row.names=1)
-  stm1 <- stm(documents=prep$documents, vocab=prep$vocab, K=K, seed=seed, prevalence = covariates, max.em.its = 500, data=feature.data, init.type = "Spectral")
-  effect <- estimateEffect(covariates, stm1, metadata=feature.data)
+  covariate.formula <- as.formula(paste0("~", covariates))
+  stm1 <- stm(documents=prep$documents, vocab=prep$vocab, K=K, seed=seed, prevalence = covariate.formula, max.em.its = 500, data=feature.data, init.type = "Spectral")
+  effect <- estimateEffect(covariate.formula, stm1, metadata=feature.data)
   print(summary(effect))
   # print(stm1$mu)
   # print(stm1$sigma)
@@ -35,12 +36,10 @@ run.stm <- function(mutation.count.file, feature.file, covariates, K, seed, expo
 mutation.count.file <- snakemake@input[[1]]
 feature.file <- snakemake@input[[2]]
 seed <- snakemake@params[[1]]
-covariate.formula <- snakemake@params[[2]]
 K <- strtoi(snakemake@wildcards[["K"]])
 exposure.output.file <- snakemake@output[[1]]
 signature.output.file <- snakemake@output[[2]]
-covariate.formula <- as.formula(covariate.formula)
-run.stm(mutation.count.file, feature.file, covariate.formula, K, seed, exposure.output.file, signature.output.file)
+run.stm(mutation.count.file, feature.file, snakemake@wildcards[["covariates"]], K, seed, exposure.output.file, signature.output.file)
 #
 # if (nchar(covariate.formula) == 0){
 #   mu.output.file <- snakemake@output[[4]]

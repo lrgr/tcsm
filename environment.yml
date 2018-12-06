@@ -1,0 +1,14 @@
+name: 'stm-signatures'
+channels:
+  - conda-forge
+  - defaults
+  - bioconda
+dependencies:
+  - pandas
+  - snakemake
+  - r-stm
+  - r-tm
+  - r-clue
+  - matplotlib
+  - scikit-learn
+  - seaborn
