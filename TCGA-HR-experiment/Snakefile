@@ -11,43 +11,41 @@ wildcard_constraints:
     cancer_type="BRCA|OV"
 
 
+# Raw input files
 SBS96_COUNT_URL = "https://obj.umiacs.umd.edu/mutation-signature-explorer/mutations/PanCanAtlas/processed/counts/counts.TCGA-{cancer_type}_{cancer_type}_mc3.v0.2.8.SBS-96.tsv"
-
-ALL_MUTATION_COUNT_MATRIX_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_SBS_all_mutation_count.tsv")
-SAMPLE_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_sample_mapping.tsv")
-ALL_FEATURE_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_all_clinical_features.tsv")
+RAW_HR_BIALLELIC_INACTIVATION_FILE=join(RAW_DIR, "TCGA-{cancer_type}_HR-biallelic-inactivation_Riaz2017.tsv")
+RAW_DDR_SILENCING_FILE=join(RAW_DIR, "TCGA-{cancer_type}_Silencing_Knijnenburg2018.tsv")
 RAW_LST_FILE=join(RAW_DIR, "TCGA-{cancer_type}_LST_Riaz2017.tsv")
+
+RAW_MUTATION_COUNT_MATRIX_FILE=join(RAW_DIR, "TCGA-{cancer_type}_mutation_count.tsv")
+
+ALL_MUTATION_COUNT_MATRIX_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_all_mutation_count.tsv")
+ALL_FEATURE_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_all_clinical_features.tsv")
+
+MC_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_mutation_count.tsv")
+FEATURE_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_features.tsv")
 
 VALIDATE_FEATURE_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_mutation_count_validate.tsv")
 VALIDATE_MC_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_clinical_features_validate.tsv")
 
 TEST_FEATURE_FILE=join(OUTPUT_DIR, "features-test_TCGA-{cancer_type}_{fold}.tsv")
 TEST_MC_FILE=join(OUTPUT_DIR, "mutation-count-test_TCGA-{cancer_type}_{fold}.tsv")
+
 TRAIN_FEATURE_FILE=join(OUTPUT_DIR, "features-train_TCGA-{cancer_type}_{fold}.tsv")
 TRAIN_MC_FILE=join(OUTPUT_DIR, "mutation-count-train_TCGA-{cancer_type}_{fold}.tsv")
 
-MC_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_mutation_count.tsv")
 
-FEATURE_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_features.tsv")
 
 #STM_BOXPLOT=join(OUTPUT_DIR, "stm-boxplot_{K}_{project}.pdf")
 
-# HELDOUT_LIKELIHOOD_FILE=join(OUTPUT_DIR, '{model}-heldout-likelihood_{K}_TCGA-BRCA_{fold}.tsv')
+# OUTPUT FILES
 STM_HELDOUT_LIKELIHOOD_FILE=join(OUTPUT_DIR, 'stm-heldout-likelihood_{covariates}_{K}_TCGA-{cancer_type}_{fold}.tsv')
+STM_COMBINED_HELDOUT_LIKELIHOOD_FILE=join(OUTPUT_DIR, 'stm-combined-heldout_{covariates}_TCGA-{cancer_type}.tsv')
 
-RAW_MUTATION_COUNT_MATRIX_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_raw_mutation_count.tsv")
-# RAW_CLINICAL_FILE=join(OUTPUT_DIR, "TCGA-BRCA_raw_clinical_file.tsv")
-MUTATION_COUNT_MATRIX_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_mutation_count.tsv")
-RAW_FEATURE_FILE=join(RAW_DIR, "TCGA_hr_biallelic_inactivation_Riaz2017.tsv")
-FEATURE_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_features.tsv")
 LIKELIHOOD_PLOT=join(OUTPUT_DIR,'likelihood-plot_{covariates1}_{covariates2}_TCGA-{cancer_type}.pdf')
 STM_HELDOUT_LIKELIHOOD_RATIO_FILE=join(OUTPUT_DIR, 'stm-heldout-ratio_{covariates}_{K}_TCGA-{cancer_type}_{fold}.tsv')
 STM_BOXPLOT=join(OUTPUT_DIR, "stm-boxplot_{K}_TCGA-{cancer_type}.pdf")
-STM_TEST_EXPOSURES_FILE=join(OUTPUT_DIR, 'stm-test-exposures_{covariates}_{K}_TCGA-{cancer_type}_{fold}.tsv')
 
-SS_EXPOSURES_FILE=join(OUTPUT_DIR, 'SS-exposures_{K}_TCGA-{cancer_type}.tsv')
-STM_COMBINED_HELDOUT_LIKELIHOOD_FILE=join(OUTPUT_DIR, 'stm-combined-heldout_{covariates}_TCGA-{cancer_type}.tsv')
-STM_NORMALIZED_EXPOSURES_FILE=join(OUTPUT_DIR, 'stm-normalized-exposures_{covariates}_{K}_TCGA-{cancer_type}.tsv')
 
 seed="123456"
 
@@ -61,30 +59,8 @@ K_RANGE=range(MIN_K, MAX_K+1)
 
 rule all:
     input:
-        expand(SIG_COSINE_PLOT, covariates="BRCA12", K=7, project="TCGA-BRCA")
-        #expand(LIKELIHOOD_PLOT, cancer_type=["BRCA"], covariates1="LST", covariates2="BRCA12"),
-        # expand(STM_HELDOUT_LIKELIHOOD_RATIO_FILE, covariates="LST", fold=FOLDS, K="7", cancer_type="BRCA"),
-        #expand(STM_TEST_EXPOSURES_FILE, cancer_type=["OV"], K=5, covariates=["BRCA12"], fold=FOLDS),
-        #expand(STM_TEST_EXPOSURES_FILE, cancer_type=["BRCA"], K=6, covariates=["BRCA12"], fold=FOLDS),
-        #expand(STM_NORMALIZED_EXPOSURES_FILE, K=5, cancer_type="OV", covariates=["BRCA12", "NULL"]),
-        #expand(STM_NORMALIZED_EXPOSURES_FILE, K=7, cancer_type="BRCA", covariates=["BRCA12", "NULL", "LST"]),
-        #expand(STM_HELDOUT_LIKELIHOOD_FILE, K=K_RANGE, cancer_type="BRCA", covariates=["LST"], fold=FOLDS),
-        # expand(STM_COMBINED_HELDOUT_LIKELIHOOD_FILE, covariates=["NULL", "BRCA12"], cancer_type="BRCA")
-        #expand(STM_BOXPLOT, K=7, cancer_type="BRCA"),
-        # expand(RAW_MUTATION_COUNT_MATRIX_FILE, cancer_type="OV")
-        # expand(STM_HELDOUT_LIKELIHOOD_FILE, K=K_RANGE, cancer_type="OV", covariates="BRCA12", fold=FOLDS),
-        # expand(LIKELIHOOD_PLOT, cancer_type="OV", model1="stm", model2="ctm"),
-        #expand(COMBINED_HELDOUT_LIKELIHOOD_FILE, cancer_type="OV", model="stm")
-        # expand(STM_HELDOUT_LIKELIHOOD_FILE, K=K_RANGE, project="TCGA-BRCA", covariates="BRCA2", fold=FOLDS),
-        # expand(STM_HELDOUT_LIKELIHOOD_FILE, K=K_RANGE, project="TCGA-BRCA", covariates="BRCA12", fold=FOLDS),
-        # expand(STM_HELDOUT_LIKELIHOOD_FILE, K=K_RANGE, project="TCGA-BRCA", covariates="BRCA1+BRCA2", fold=FOLDS),
-        # expand(NORMALIZED_EXPOSURES_FILE, K=8, project="TCGA-BRCA", model=["stm", "ctm"]),
-        # expand(CTM_NORMALIZED_EXPOSURES_FILE, K=6, project="TCGA-BRCA")
-        #expand(HELDOUT_LIKELIHOOD_FILE, fold=FOLDS, model=["stm", "ctm"], K=K_RANGE),
-        #expand(LIKELIHOOD_PLOT, model1="stm", model2="stm", project="TCGA-BRCA")
-        # expand(CTM_TEST_EXPOSURES_FILE, K=8, fold=FOLDS),
-        # expand(SS_EXPOSURES_FILE, K=8)
-        # expand(LIKELIHOOD_PLOT, model1="stm", model2="ctm", project="TCGA-BRCA")
+        expand(ALL_FEATURE_FILE, cancer_type="BRCA")
+        # expand(SIG_COSINE_PLOT, covariates="BRCA12", K=7, project="TCGA-BRCA")
 
 
 rule calc_stats_ratio:
@@ -147,10 +123,11 @@ rule download_sbs_count_data:
 rule clean_feature_mutation_count:
     input:
         RAW_MUTATION_COUNT_MATRIX_FILE,
-        RAW_FEATURE_FILE,
+        RAW_HR_BIALLELIC_INACTIVATION_FILE,
+        RAW_DDR_SILENCING_FILE,
         RAW_LST_FILE
     output:
-        MUTATION_COUNT_MATRIX_FILE,
-        FEATURE_FILE
+        ALL_MUTATION_COUNT_MATRIX_FILE,
+        ALL_FEATURE_FILE
     script:
         "src/clean_feature_mutation_count.py"
