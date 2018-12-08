@@ -8,7 +8,6 @@ if __name__ == '__main__':
     lst_df = lst_df.drop(columns="Cancer Type")
     lst_df = lst_df.set_index("Sample")
     mc_df.index = [i[0:12] for i in mc_df.index]
-    print(bi_inactivation_df["BRCA2"].sum())
     samples = list(set(mc_df.index).intersection(bi_inactivation_df.index).intersection(lst_df.index).intersection(silencing_df.index))
     mc_df = mc_df.loc[samples]
     mc_df.to_csv(snakemake.output[0], sep="\t")
@@ -19,15 +18,7 @@ if __name__ == '__main__':
     genes = list(set(bi_inactivation_df.columns).intersection(silencing_df.columns))
     silencing_df = silencing_df[genes]
     bi_inactivation_df = bi_inactivation_df[genes]
-    print(silencing_df["BRCA1"].sum())
-    print(bi_inactivation_df["BRCA1"].sum())
-    feature_df = bi_inactivation_df.append(silencing_df)
-    #print(feature_df["BRCA1"])
-    #print(feature_df["BRCA2"])
-    #print(feature_df["BRCA1"].sum())
-    #print(feature_df["BRCA2"].sum())
+    feature_df = bi_inactivation_df + silencing_df
     feature_df["BRCA12"] = feature_df["BRCA1"] + feature_df["BRCA2"]
-    #print(feature_df["BRCA12"].sum())
-    #print(feature_df["BRCA12"])
     feature_df = feature_df.merge(lst_df, left_index=True, right_index=True)
     feature_df.to_csv(snakemake.output[1], sep="\t")
