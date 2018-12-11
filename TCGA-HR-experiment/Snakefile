@@ -44,7 +44,7 @@ STM_COMBINED_HELDOUT_LIKELIHOOD_FILE=join(OUTPUT_DIR, 'stm-combined-heldout_{cov
 
 LIKELIHOOD_PLOT=join(OUTPUT_DIR,'likelihood-plot_{covariates1}_{covariates2}_TCGA-{cancer_type}.pdf')
 STM_HELDOUT_LIKELIHOOD_RATIO_FILE=join(OUTPUT_DIR, 'stm-heldout-ratio_{covariates}_{K}_TCGA-{cancer_type}_{fold}.tsv')
-STM_BOXPLOT=join(OUTPUT_DIR, "stm-boxplot_{K}_TCGA-{cancer_type}.pdf")
+STM_BOXPLOT=join(OUTPUT_DIR, "stm-boxplot_{covariates}_{K}_TCGA-{cancer_type}.pdf")
 
 
 seed="123456"
@@ -59,13 +59,14 @@ K_RANGE=range(MIN_K, MAX_K+1)
 
 rule all:
     input:
-        expand(ALL_FEATURE_FILE, cancer_type="BRCA")
-        # expand(SIG_COSINE_PLOT, covariates="BRCA12", K=7, project="TCGA-BRCA")
+        # expand(STM_SIGNATURES_FILE, covariates=["BRCA12", "BRCA1+BRCA2"], project=["TCGA-BRCA"], K=6)
+        #expand(SIG_COSINE_PLOT, covariates=["BRCA12","BRCA1+BRCA2", "NULL"] , K=5, project="TCGA-BRCA")
+        expand(STM_BOXPLOT, K=5, covariates="BRCA12", cancer_type="BRCA")
 
 
 rule calc_stats_ratio:
     input:
-        expand(STM_HELDOUT_LIKELIHOOD_RATIO_FILE, covariates="BRCA12", fold=FOLDS, K="{K}", cancer_type="{cancer_type}")
+        expand(STM_HELDOUT_LIKELIHOOD_RATIO_FILE, covariates="{covariates}", fold=FOLDS, K="{K}", cancer_type="{cancer_type}")
     output:
         STM_BOXPLOT
     script:

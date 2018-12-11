@@ -3,9 +3,6 @@ source(snakemake@params[[2]])
 
 
 run.stm <- function(train.mutation.count.file, test.mutation.count.file, train.feature.file, test.feature.file, covariates, K, seed, train.exposures.file, test.exposures.file){
-  heldout <- make.heldout.obj(train.mutation.count.file, test.mutation.count.file)
-  heldout.ratio <- get.heldout.ratio(train.feature.file, test.feature.file, heldout, K, seed, covariates)
-  predicted.feature.data <- as.integer(heldout.ratio > 0)
   # run the model on just the training data
   train.prep <- load.stm.documents(train.mutation.count.file)
   train.feature.data <- read.delim(train.feature.file, sep = '\t', header = TRUE, row.names=1)
@@ -19,7 +16,12 @@ run.stm <- function(train.mutation.count.file, test.mutation.count.file, train.f
   #print(predicted.feature.data)
   #print(train.feature.data)
   test.feature.data <- read.delim(test.feature.file, sep = '\t', header = TRUE, row.names=1)
-  test.feature.data[covariates] <- predicted.feature.data
+  heldout <- make.heldout.obj(train.mutation.count.file, test.mutation.count.file)
+  if (covariates != "NULL"){
+    heldout.ratio <- get.heldout.ratio(train.feature.file, test.feature.file, heldout, K, seed, covariates)
+    predicted.feature.data <- as.integer(heldout.ratio > 0)
+    test.feature.data[covariates] <- predicted.feature.data
+  }
   test.results <- fitNewDocuments(model=stm1, documents=test.prep$documents, newData=test.feature.data,
                   origData=train.feature.data, prevalence=covariate.formula)
   test.exposures <- as.data.frame(test.results$theta)
