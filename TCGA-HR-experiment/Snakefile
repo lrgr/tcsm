@@ -52,7 +52,7 @@ seed="123456"
 N_FOLDS=5
 FOLDS=range(0, N_FOLDS)
 
-MIN_K=2
+MIN_K=3
 MAX_K=10
 K_RANGE=range(MIN_K, MAX_K+1)
 
@@ -63,6 +63,9 @@ rule all:
         #expand(SIG_COSINE_PLOT, covariates=["BRCA12","BRCA1+BRCA2", "NULL"] , K=5, project="TCGA-BRCA")
         expand(STM_BOXPLOT, K=5, covariates="BRCA12", cancer_type="BRCA")
 
+rule model_selection:
+    input:
+        expand(LIKELIHOOD_PLOT, covariates1="BRCA12", covariates2=["NULL", "BRCA1+BRCA2", "LST"], cancer_type="BRCA")
 
 rule calc_stats_ratio:
     input:
