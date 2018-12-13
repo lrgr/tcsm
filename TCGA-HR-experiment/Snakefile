@@ -59,9 +59,12 @@ K_RANGE=range(MIN_K, MAX_K+1)
 
 rule all:
     input:
-        # expand(STM_SIGNATURES_FILE, covariates=["BRCA12", "BRCA1+BRCA2"], project=["TCGA-BRCA"], K=6)
+        #STM_EFFECT_TABLE=join(OUTPUT_DIR, 'stm-effect-table_{covariates}_{K}_{project}.tsv')
+        expand(STM_EFFECT_PLOT, covariates=["BRCA12"], project="TCGA-BRCA", K=[6, 7, 9, 11]),
+        expand(SIG_COSINE_PLOT, covariates=["BRCA12"] , K=[6, 7, 9, 11], project="TCGA-BRCA"),
+        # expand(STM_SIGNATURES_FILE, covariates=["BRCA12"], project=["TCGA-BRCA"], K=6)
         #expand(SIG_COSINE_PLOT, covariates=["BRCA12","BRCA1+BRCA2", "NULL"] , K=5, project="TCGA-BRCA")
-        expand(STM_BOXPLOT, K=5, covariates="BRCA12", cancer_type="BRCA")
+        # expand(STM_BOXPLOT, K=[6, 7, 9, 11], covariates="BRCA12", cancer_type="BRCA")
 
 rule model_selection:
     input:

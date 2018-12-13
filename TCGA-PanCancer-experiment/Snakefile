@@ -46,7 +46,9 @@ K_RANGE=range(MIN_K, MAX_K+1)
 
 rule all:
     input:
-        expand(LIKELIHOOD_PLOT, covariates1="+".join(CANCER_TYPES), covariates2="NULL")
+        # expand(LIKELIHOOD_PLOT, covariates1="+".join(CANCER_TYPES), covariates2="NULL"),
+        expand(STM_EFFECT_PLOT, covariates="+".join(CANCER_TYPES), project="TCGAPanCan", K=10),
+        expand(SIG_COSINE_PLOT, covariates="+".join(CANCER_TYPES) , K=10, project="TCGAPanCan"),
 
 
 rule combine_stm_heldout_likelihood_files:

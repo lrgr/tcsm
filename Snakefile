@@ -26,6 +26,8 @@ STM_NORMALIZED_EXPOSURES_FILE=join(OUTPUT_DIR, 'stm-normalized-exposures_{covari
 STM_EXPOSURES_FILE=join(OUTPUT_DIR, 'stm-exposures_{covariates}_{K}_{project}.tsv')
 STM_SIGNATURES_FILE=join(OUTPUT_DIR, 'stm-signatures_{covariates}_{K}_{project}.tsv')
 STM_HELDOUT_LIKELIHOOD_FILE=join(OUTPUT_DIR, 'stm-heldout-likelihood_{covariates}_{K}_{project}.tsv')
+STM_EFFECT_TABLE=join(OUTPUT_DIR, 'stm-effect-table_{covariates}_{K}_{project}.tsv')
+STM_EFFECT_PLOT=join(OUTPUT_DIR, 'stm-effect-table_{covariates}_{K}_{project}.pdf')
 # STM_MODEL_SELECTION_FILE=join(OUTPUT_DIR, 'stm-model-selection_{project}.pdf')
 # STM_PERMUTATION_TEST_FILE=join(OUTPUT_DIR, 'stm-permutation-test-results_{K}_{project}.pdf')
 STM_HELDOUT_LIKELIHOOD_RATIO_FILE=join(OUTPUT_DIR, 'stm-heldout-ratio_{covariates}_{K}_{project}.tsv')
@@ -84,7 +86,8 @@ rule run_stm:
         FEATURE_FILE
     output:
         STM_NORMALIZED_EXPOSURES_FILE,
-        STM_SIGNATURES_FILE
+        STM_SIGNATURES_FILE,
+        STM_EFFECT_TABLE
     script:
         "src/run_stm.R"
 
@@ -103,6 +106,13 @@ rule stm_heldout_likelihood:
     script:
         "src/stm_heldout_likelihood.R"
 
+rule stm_plot_effect:
+    input:
+        STM_EFFECT_TABLE
+    output:
+        STM_EFFECT_PLOT
+    script:
+        "src/plot_effects.py"
 # rule stm_permutation_test:
 #     params:
 #         seed,

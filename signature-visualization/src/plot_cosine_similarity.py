@@ -19,7 +19,7 @@ if __name__ == '__main__':
     M = cosine_similarity(exp_sigs, gt_sigs)
     df = pd.DataFrame(data=M, index=exp_sigs.index, columns=gt_sigs.index)
     df.to_csv(snakemake.output[1], sep="\t")
-    ax = sns.heatmap(df)
+    ax = sns.heatmap(df, annot=True)
     fig = ax.get_figure()
     fig.savefig(snakemake.output[0])
     # print(df)

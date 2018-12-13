@@ -31,9 +31,9 @@ if __name__ == '__main__':
     #df = df.rename(columns={"BRCA12": "BRCA Status", "heldout.ratio": heldout})
     df[gene] = df[gene].map({1: "Biallelic Inactivation", 0: "Wildtype"})
     # df = df.loc[df[gene] == "Wildtype"]
-    # print(ranksums(df.loc[df[heldout] > 0]["LST"], df.loc[df[heldout] < 0]["LST"]))
-    sns.scatterplot(df[heldout], df["LST"])
-    plt.show()
+    print(ranksums(df.loc[df[heldout] > 0]["LST"], df.loc[df[heldout] < 0]["LST"]))
+    #sns.scatterplot(df[heldout], df["LST"])
+    #plt.show()
     # df[heldout]
     # print(df.groupby(by="true.brcaness").mean())
     # sig = ranksums(df.loc[df["BRCA Status"] == "BRCA-deficient"]["Held-out Log-Likelihood Ratio"], df.loc[df["BRCA Status"] == "BRCA-proficient"]["Held-out Log-Likelihood Ratio"])
@@ -41,5 +41,5 @@ if __name__ == '__main__':
     ax = sns.swarmplot(x=gene, y=heldout, data=df)
     ax = sns.boxplot(x=gene, y=heldout, data=df, showcaps=False, boxprops={'facecolor':'None'}, showfliers=False, whiskerprops={'linewidth':0})
     ax.set_xlabel('Held-out Samples')
-    plt.show()
-    # plt.savefig(snakemake.output[0])
+    # plt.show()
+    plt.savefig(snakemake.output[0])

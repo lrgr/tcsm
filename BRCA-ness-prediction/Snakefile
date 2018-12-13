@@ -11,9 +11,10 @@ TEST_FEATURE_FILE=join(OUTPUT_DIR, "features-test_TCGA-BRCA_{fold}.tsv")
 TRAIN_FEATURE_FILE=join(OUTPUT_DIR, "features-train_TCGA-BRCA_{fold}.tsv")
 FEATURE_FILE=join(OUTPUT_DIR, "TCGA-BRCA_features.tsv")
 
-HELDOUT_AUC_FILE=join(OUTPUT_DIR, 'linear-svm-heldout-accuracy_{covariates}_{K}.pdf')
-OVERALL_HELDOUT_PREDICTION_ACCURACY_FILE=join(OUTPUT_DIR, 'linear-svm-heldout-accuracy.tsv')
-MODEL_PREDICTION_AUC_FILE=join(OUTPUT_DIR, 'linear-svm-accuracy_{covariates}_{K}.pdf')
+HELDOUT_AUC_FILE=join(OUTPUT_DIR, 'linear-svm-heldout-auc_{covariates}_{K}.pdf')
+IN_SAMPLE_AUC_FILE=join(OUTPUT_DIR, 'linear-svm-auc_{covariates}_{K}.pdf')
+IN_SAMPLE_PR_FILE=join(OUTPUT_DIR, 'linear-svm-pr_{covariates}_{K}.pdf')
+HELDOUT_PR_FILE=join(OUTPUT_DIR, 'linear-svm-heldout-pr_{covariates}_{K}.pdf')
 
 
 N_FOLDS=5
@@ -23,18 +24,26 @@ FOLDS=range(0, N_FOLDS)
 rule predict_all:
     input:
         # OVERALL_HELDOUT_PREDICTION_ACCURACY_FILE,
-        # expand(MODEL_PREDICTION_AUC_FILE, covariates=["BRCA12", "NULL"], K=5),
-        expand(HELDOUT_AUC_FILE, covariates=["BRCA12", "NULL"], K=6)
+        expand(HELDOUT_PR_FILE, covariates=["NULL", "BRCA12"], K=6),
+        # expand(HELDOUT_AUC_FILE, covariates=["BRCA12", "NULL"], K=6)
 
-
-rule run_LinearSVC_CV:
+rule in_sample_PR:
     input:
         STM_NORMALIZED_EXPOSURES_FILE,
         FEATURE_FILE
     output:
-        MODEL_PREDICTION_AUC_FILE
+        IN_SAMPLE_PR_FILE
     script:
-        "src/run_LinearSVC_CV.py"
+        "src/run_LinearSVC_CV_PR.py"
+
+rule in_sample_AUC:
+    input:
+        STM_NORMALIZED_EXPOSURES_FILE,
+        FEATURE_FILE
+    output:
+        IN_SAMPLE_AUC_FILE
+    script:
+        "src/run_LinearSVC_CV_AUC_ROC.py"
 
 # rule combine_prediction_accuracy:
 #     input:
@@ -44,7 +53,18 @@ rule run_LinearSVC_CV:
 #     script:
 #         "src/combine_prediction_accuracy.py"
 
-rule run_LinearSVC:
+rule heldout_PR:
+    input:
+        expand(STM_TRAIN_EXPOSURES_FILE, covariates="{covariates}", K="{K}", fold=FOLDS),
+        expand(STM_TEST_EXPOSURES_FILE, covariates="{covariates}", K="{K}", fold=FOLDS),
+        expand(TRAIN_FEATURE_FILE, covariates="{covariates}", K="{K}", fold=FOLDS),
+        expand(TEST_FEATURE_FILE, covariates="{covariates}", K="{K}", fold=FOLDS)
+    output:
+        HELDOUT_PR_FILE
+    script:
+        "src/run_LinearSVC_PR.py"
+
+rule heldout_AUC:
     input:
         expand(STM_TRAIN_EXPOSURES_FILE, covariates="{covariates}", K="{K}", fold=FOLDS),
         expand(STM_TEST_EXPOSURES_FILE, covariates="{covariates}", K="{K}", fold=FOLDS),
@@ -53,4 +73,4 @@ rule run_LinearSVC:
     output:
         HELDOUT_AUC_FILE
     script:
-        "src/run_LinearSVC.py"
+        "src/run_LinearSVC_AUC_ROC.py"
