@@ -1,5 +1,9 @@
 from os.path import join
 
+subworkflow dataworkflow:
+    workdir:
+        "../TCGA-data"
+
 include: '../Snakefile'
 #include: '../SomaticSignatures/Snakefile'
 include: '../signature-visualization/Snakefile'
@@ -10,23 +14,23 @@ RAW_DIR = 'raw'
 wildcard_constraints:
     cancer_type="BRCA|OV"
 
-
-# Raw input files
-SBS96_COUNT_URL = "https://obj.umiacs.umd.edu/mutation-signature-explorer/mutations/PanCanAtlas/processed/counts/counts.TCGA-{cancer_type}_{cancer_type}_mc3.v0.2.8.SBS-96.tsv"
-RAW_HR_BIALLELIC_INACTIVATION_FILE=join(RAW_DIR, "TCGA-{cancer_type}_HR-biallelic-inactivation_Riaz2017.tsv")
-RAW_DDR_SILENCING_FILE=join(RAW_DIR, "TCGA-{cancer_type}_Silencing_Knijnenburg2018.tsv")
-RAW_LST_FILE=join(RAW_DIR, "TCGA-{cancer_type}_LST_Riaz2017.tsv")
-
+# Files from the TCGA-data workflow
 RAW_MUTATION_COUNT_MATRIX_FILE=join(RAW_DIR, "TCGA-{cancer_type}_mutation_count.tsv")
+POLE_EXO_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_POLE-exo_feature.tsv")
+HR_FEATURE_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_HRd_feature.tsv")
+LST_FEATURE_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_LST_feature.tsv")
+HR_BIALLELIC_INACTIVATION_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_HR-biallelic-inactivation_Riaz2017.tsv")
+DDR_SILENCING_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_Silencing_Knijnenburg2018.tsv")
 
+# Input files
 ALL_MUTATION_COUNT_MATRIX_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_all_mutation_count.tsv")
 ALL_FEATURE_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_all_clinical_features.tsv")
 
-MC_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_mutation_count.tsv")
-FEATURE_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_features.tsv")
+MC_FILE=join(OUTPUT_DIR, "mutation-count-all_TCGA-{cancer_type}.tsv")
+FEATURE_FILE=join(OUTPUT_DIR, "features-all_TCGA-{cancer_type}.tsv")
 
-VALIDATE_FEATURE_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_mutation_count_validate.tsv")
-VALIDATE_MC_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_clinical_features_validate.tsv")
+VALIDATE_FEATURE_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_features_validate.tsv")
+VALIDATE_MC_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_mutation_count_validate.tsv")
 
 TEST_FEATURE_FILE=join(OUTPUT_DIR, "features-test_TCGA-{cancer_type}_{fold}.tsv")
 TEST_MC_FILE=join(OUTPUT_DIR, "mutation-count-test_TCGA-{cancer_type}_{fold}.tsv")
@@ -35,15 +39,13 @@ TRAIN_FEATURE_FILE=join(OUTPUT_DIR, "features-train_TCGA-{cancer_type}_{fold}.ts
 TRAIN_MC_FILE=join(OUTPUT_DIR, "mutation-count-train_TCGA-{cancer_type}_{fold}.tsv")
 
 
-
-#STM_BOXPLOT=join(OUTPUT_DIR, "stm-boxplot_{K}_{project}.pdf")
-
 # OUTPUT FILES
 STM_HELDOUT_LIKELIHOOD_FILE=join(OUTPUT_DIR, 'stm-heldout-likelihood_{covariates}_{K}_TCGA-{cancer_type}_{fold}.tsv')
 STM_COMBINED_HELDOUT_LIKELIHOOD_FILE=join(OUTPUT_DIR, 'stm-combined-heldout_{covariates}_TCGA-{cancer_type}.tsv')
 
 LIKELIHOOD_PLOT=join(OUTPUT_DIR,'likelihood-plot_{covariates1}_{covariates2}_TCGA-{cancer_type}.pdf')
 STM_HELDOUT_LIKELIHOOD_RATIO_FILE=join(OUTPUT_DIR, 'stm-heldout-ratio_{covariates}_{K}_TCGA-{cancer_type}_{fold}.tsv')
+LST_PLOT=join(OUTPUT_DIR, "lst-scatterplot_{covariates}_{K}_TCGA-{cancer_type}.pdf")
 STM_BOXPLOT=join(OUTPUT_DIR, "stm-boxplot_{covariates}_{K}_TCGA-{cancer_type}.pdf")
 
 
@@ -55,29 +57,40 @@ FOLDS=range(0, N_FOLDS)
 MIN_K=3
 MAX_K=10
 K_RANGE=range(MIN_K, MAX_K+1)
-
+K=[6]
+# these are all the covariates that are inactivated in at least 3 patients
+covariates = ["biBRCA1", "biBRCA2", "biATM", "biCHEK2", "biFANCM", "POLEexo",
+              "esBRCA1", "esRAD51C", "esMGMT", "esALKBH3", "esFANCF", "esMLH3", "esMLH1"]
 
 rule all:
     input:
-        #STM_EFFECT_TABLE=join(OUTPUT_DIR, 'stm-effect-table_{covariates}_{K}_{project}.tsv')
-        expand(STM_EFFECT_PLOT, covariates=["BRCA12"], project="TCGA-BRCA", K=[6, 7, 9, 11]),
-        expand(SIG_COSINE_PLOT, covariates=["BRCA12"] , K=[6, 7, 9, 11], project="TCGA-BRCA"),
-        # expand(STM_SIGNATURES_FILE, covariates=["BRCA12"], project=["TCGA-BRCA"], K=6)
-        #expand(SIG_COSINE_PLOT, covariates=["BRCA12","BRCA1+BRCA2", "NULL"] , K=5, project="TCGA-BRCA")
-        # expand(STM_BOXPLOT, K=[6, 7, 9, 11], covariates="BRCA12", cancer_type="BRCA")
+        #expand(LST_PLOT, covariates=["BRCA12"], cancer_type="BRCA", K=K),
+        #expand(STM_BOXPLOT, covariates=["BRCA12"], cancer_type="BRCA", K=K),
+        #expand(ALL_FEATURE_FILE, cancer_type="BRCA"),
+        #expand(SIG_PLOT, covariates=["BRCA12+POLE"], project="TCGA-BRCA", K=K),
+        expand(STM_EFFECT_PLOT, covariates=[covariates], project="TCGA-BRCA", K=K),
+        #expand(SIG_COSINE_PLOT, covariates=["BRCA12+POLE"] , K=K, project="TCGA-BRCA"),
+        # expand(STM_BOXPLOT, K=K, covariates="BRCA12", cancer_type="BRCA"),
 
 rule model_selection:
     input:
-        expand(LIKELIHOOD_PLOT, covariates1="BRCA12", covariates2=["NULL", "BRCA1+BRCA2", "LST"], cancer_type="BRCA")
+        expand(LIKELIHOOD_PLOT, covariates1="NULL", covariates2=covariates, cancer_type="BRCA")
 
-rule calc_stats_ratio:
+rule plot_heldout_ratio:
     input:
         expand(STM_HELDOUT_LIKELIHOOD_RATIO_FILE, covariates="{covariates}", fold=FOLDS, K="{K}", cancer_type="{cancer_type}")
     output:
         STM_BOXPLOT
     script:
-        "src/calculate_heldout_ratio_statistics.py"
+        "src/plot_heldout_ratio.py"
 
+rule plot_LST_by_heldout_ratio:
+    input:
+        expand(STM_HELDOUT_LIKELIHOOD_RATIO_FILE, covariates="{covariates}", fold=FOLDS, K="{K}", cancer_type="{cancer_type}")
+    output:
+        LST_PLOT
+    script:
+        "src/plot_LST.py"
 
 rule combine_stm_heldout_likelihood_files:
     input:
@@ -119,20 +132,17 @@ rule split_validate_training:
     script:
         "../src/split_training_validate_data.py"
 
-rule download_sbs_count_data:
-    params:
-        SBS96_COUNT_URL
-    output:
-        RAW_MUTATION_COUNT_MATRIX_FILE
-    shell:
-        "wget -O {output} {params}"
 
 rule clean_feature_mutation_count:
+    params:
+        seed=seed
     input:
-        RAW_MUTATION_COUNT_MATRIX_FILE,
-        RAW_HR_BIALLELIC_INACTIVATION_FILE,
-        RAW_DDR_SILENCING_FILE,
-        RAW_LST_FILE
+        dataworkflow(RAW_MUTATION_COUNT_MATRIX_FILE),
+        dataworkflow(POLE_EXO_FILE),
+        dataworkflow(HR_BIALLELIC_INACTIVATION_FILE),
+        dataworkflow(DDR_SILENCING_FILE),
+        dataworkflow(LST_FEATURE_FILE),
+        dataworkflow(HR_FEATURE_FILE),
     output:
         ALL_MUTATION_COUNT_MATRIX_FILE,
         ALL_FEATURE_FILE

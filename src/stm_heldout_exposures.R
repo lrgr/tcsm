@@ -2,7 +2,7 @@ library(stm)
 source(snakemake@params[[2]])
 
 
-run.stm <- function(train.mutation.count.file, test.mutation.count.file, train.feature.file, test.feature.file, covariates, K, seed, train.exposures.file, test.exposures.file){
+run.stm <- function(train.mutation.count.file, test.mutation.count.file, train.feature.file, test.feature.file, covariates, K, seed, train.exposures.file, test.exposures.file, signature.output.file){
   # run the model on just the training data
   train.prep <- load.stm.documents(train.mutation.count.file)
   train.feature.data <- read.delim(train.feature.file, sep = '\t', header = TRUE, row.names=1)
@@ -40,6 +40,13 @@ run.stm <- function(train.mutation.count.file, test.mutation.count.file, train.f
   #df <- data.frame("heldout.ratio"=heldout.ratio, "true.brcaness"=test.feature.data$feature1)
   write.table(train.exposures, train.exposures.file, sep="\t")
   write.table(test.exposures, test.exposures.file, sep="\t")
+  mat <- stm1$beta$logbeta[[1]]
+  signatures <- apply(mat, 1:2, exp)
+  colnames(signatures) <- toupper(stm1$vocab)
+  dt <- make.dt(stm1)
+  rownames(signatures) <- colnames(dt)[-1]
+  # save the signatures
+  write.table(signatures, file=signature.output.file, sep="\t")
 }
 
 
@@ -52,8 +59,9 @@ seed <- strtoi(snakemake@params[[1]])
 K <- strtoi(snakemake@wildcards[["K"]])
 train.exposures.file <- snakemake@output[[1]]
 test.exposures.file <- snakemake@output[[2]]
+signatures.file <- snakemake@output[[3]]
 
 
 run.stm(train.mutation.count.file, test.mutation.count.file, train.feature.file,
         test.feature.file, snakemake@wildcards[["covariates"]], K, seed, train.exposures.file,
-        test.exposures.file)
+        test.exposures.file, signatures.file)
