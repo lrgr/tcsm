@@ -1,6 +1,8 @@
 from os.path import join
 include: "../Snakefile"
-include: "../TCGA-HR-experiment/Snakefile"
+
+subworkflow TCGAHR:
+    workdir: "../TCGA-HR-experiment"
 
 OUTPUT_DIR = 'processed'
 
@@ -33,16 +35,16 @@ SIG_COSINE_SIM =join(OUTPUT_DIR, "cosine-similarity-null-0-3.tsv")
 N_FOLDS=5
 FOLDS=range(0, N_FOLDS)
 
-K=[6]
+K=[7]
 rule predict_all:
     input:
-        expand(STM_ALL_EXPOSURES_FILE, covariates=["LST", "BRCA12", "NULL"], K=K, norm=['count', 'normalized']),
-        expand(STM_TRAIN_EXPOSURES_FILE, covariates=["BRCA12", "NULL"], K=K, norm=['count', 'normalized'], fold=FOLDS),
-        expand(STM_TEST_EXPOSURES_FILE, covariates=["BRCA12", "NULL"], K=K, norm=['count', 'normalized'], fold=FOLDS),
+        # expand(STM_ALL_EXPOSURES_FILE, covariates=["LST", "BRCA12", "NULL"], K=K, norm=['count', 'normalized']),
+        # expand(STM_TRAIN_EXPOSURES_FILE, covariates=["BRCA12", "NULL"], K=K, norm=['count', 'normalized'], fold=FOLDS),
+        # expand(STM_TEST_EXPOSURES_FILE, covariates=["BRCA12", "NULL"], K=K, norm=['count', 'normalized'], fold=FOLDS),
         expand(IN_SAMPLE_PR_FILE, covariates=["LST", "NULL", "BRCA12"], K=K, norm=['count', 'normalized']),
         # IN_SAMPLE_PR_FILE_MC,
-        IN_SAMPLE_PR_LST_FILE,
-        expand(HELDOUT_PR_FILE, covariates=["NULL", "BRCA12"], K=K, norm=['count', 'normalized']),
+        # IN_SAMPLE_PR_LST_FILE,
+        # expand(HELDOUT_PR_FILE, covariates=["NULL", "BRCA12"], K=K, norm=['count', 'normalized']),
         #STM_TEST_COUNT_EXPOSURES_FILE,
         #STM_TRAIN_COUNT_EXPOSURES_FILE
         # OVERALL_HELDOUT_PREDICTION_ACCURACY_FILE,
@@ -50,25 +52,21 @@ rule predict_all:
         # expand(HELDOUT_PR_FILE, covariates=["NULL", "BRCA12"], K=6),
         # expand(HELDOUT_AUC_FILE, covariates=["BRCA12", "NULL"], K=6)
 
-rule cal_cosine_similarity:
-    input:
-        S1,
-        S2
-    output:
-        SIG_COSINE_PLOT,
-        SIG_COSINE_SIM
-    script:
-        "../signature-visualization/src/plot_cosine_similarity.py"
+# rule cal_cosine_similarity:
+#     input:
+#         S1,
+#         S2
+#     output:
+#         SIG_COSINE_PLOT,
+#         SIG_COSINE_SIM
+#     script:
+#         "../signature-visualization/src/plot_cosine_similarity.py"
 
-rule order_exposures:
-    input:
-
-    output:
 
 
 rule in_sample_PR_LST:
     input:
-        FEATURE_FILE
+        TCGAHR(FEATURE_FILE)
     output:
         IN_SAMPLE_PR_LST_FILE
     script:
@@ -76,8 +74,8 @@ rule in_sample_PR_LST:
 
 rule in_sample_PR_mutation_counts:
     input:
-        MC_FILE,
-        FEATURE_FILE
+        TCGAHR(MC_FILE),
+        TCGAHR(FEATURE_FILE)
     output:
         IN_SAMPLE_PR_FILE_MC
     script:
@@ -85,23 +83,23 @@ rule in_sample_PR_mutation_counts:
 
 rule in_sample_PR:
     input:
-        STM_ALL_EXPOSURES_FILE,
-        FEATURE_FILE
+        TCGAHR(STM_ALL_EXPOSURES_FILE),
+        TCGAHR(FEATURE_FILE)
     output:
         IN_SAMPLE_PR_FILE
     script:
         "src/run_LinearSVC_CV_PR.py"
 
-rule heldout_PR:
-    input:
-        expand(STM_TRAIN_EXPOSURES_FILE, norm="{norm}", covariates="{covariates}", K="{K}", fold=FOLDS),
-        expand(STM_TEST_EXPOSURES_FILE, norm="{norm}", covariates="{covariates}", K="{K}", fold=FOLDS),
-        expand(TRAIN_FEATURE_FILE, covariates="{covariates}", K="{K}", fold=FOLDS),
-        expand(TEST_FEATURE_FILE, covariates="{covariates}", K="{K}", fold=FOLDS)
-    output:
-        HELDOUT_PR_FILE
-    script:
-        "src/run_LinearSVC_PR.py"
+# rule heldout_PR:
+#     input:
+#         expand(STM_TRAIN_EXPOSURES_FILE, norm="{norm}", covariates="{covariates}", K="{K}", fold=FOLDS),
+#         expand(STM_TEST_EXPOSURES_FILE, norm="{norm}", covariates="{covariates}", K="{K}", fold=FOLDS),
+#         expand(TRAIN_FEATURE_FILE, covariates="{covariates}", K="{K}", fold=FOLDS),
+#         expand(TEST_FEATURE_FILE, covariates="{covariates}", K="{K}", fold=FOLDS)
+#     output:
+#         HELDOUT_PR_FILE
+#     script:
+#         "src/run_LinearSVC_PR.py"
 
 
 # rule in_sample_AUC:

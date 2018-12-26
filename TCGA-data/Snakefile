@@ -4,7 +4,7 @@ OUTPUT_DIR = 'processed'
 RAW_DIR = 'raw'
 
 wildcard_constraints:
-    cancer_type="BRCA|OV"
+    cancer_type="[A-Z]+"
 
 
 # Raw input files
@@ -25,15 +25,15 @@ DDR_SILENCING_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_Silencing_Knijnenburg201
 DDR_MUTATED_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_Mutated_Knijnenburg2018.tsv")
 DDR_DELETED_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_Deleted_Knijnenburg2018.tsv")
 
-rule all:
-    input:
-        expand(POLE_EXO_FILE, cancer_type="BRCA"),
-        expand(HR_FEATURE_FILE, cancer_type="BRCA"),
-        expand(LST_FEATURE_FILE, cancer_type="BRCA"),
-        expand(HR_BIALLELIC_INACTIVATION_FILE, cancer_type="BRCA"),
-        expand(DDR_SILENCING_FILE, cancer_type="BRCA"),
-        expand(DDR_MUTATED_FILE, cancer_type="BRCA"),
-        expand(DDR_DELETED_FILE, cancer_type="BRCA"),
+# rule all:
+#     input:
+#         expand(POLE_EXO_FILE, cancer_type="BRCA"),
+#         expand(HR_FEATURE_FILE, cancer_type="BRCA"),
+#         expand(LST_FEATURE_FILE, cancer_type="BRCA"),
+#         expand(HR_BIALLELIC_INACTIVATION_FILE, cancer_type="BRCA"),
+#         expand(DDR_SILENCING_FILE, cancer_type="BRCA"),
+#         expand(DDR_MUTATED_FILE, cancer_type="BRCA"),
+#         expand(DDR_DELETED_FILE, cancer_type="BRCA"),
 
 rule clean_pole_file:
     input:

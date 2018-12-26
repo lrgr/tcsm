@@ -1,15 +1,26 @@
 from os.path import join
 configfile: 'config.yml'
+subworkflow dataworkflow:
+    workdir:
+        "../TCGA-data"
+
 include: '../Snakefile'
 include: '../signature-visualization/Snakefile'
+
 wildcard_constraints:
     cancer_type="[A-Z]+"
 
-SBS96_COUNT_URL = "https://obj.umiacs.umd.edu/mutation-signature-explorer/mutations/PanCanAtlas/processed/counts/counts.TCGA-{cancer_type}_{cancer_type}_mc3.v0.2.8.SBS-96.tsv"
+RAW_DIR = 'raw'
+OUTPUT_DIR = 'processed'
+
+# Files from TCGA-data subworkflow
+RAW_MUTATION_COUNT_MATRIX_FILE=join(RAW_DIR, "TCGA-{cancer_type}_mutation_count.tsv")
+POLE_EXO_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_POLE-exo_feature.tsv")
+DDR_SILENCING_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_Silencing_Knijnenburg2018.tsv")
+DDR_MUTATED_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_Mutated_Knijnenburg2018.tsv")
+DDR_DELETED_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_Deleted_Knijnenburg2018.tsv")
 
 ALL_MUTATION_COUNT_MATRIX_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_all_mutation_count.tsv")
-#RAW_FEATURE_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_raw_clinical.tsv")
-#SAMPLE_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_sample_mapping.tsv")
 ALL_FEATURE_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_all_features.tsv")
 
 VALIDATE_FEATURE_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_mutation_count_validate.tsv")
@@ -39,17 +50,48 @@ N_FOLDS=5
 FOLDS=range(0, N_FOLDS)
 
 CANCER_TYPES=config["Cancer-Types"]
+# all the covariates with at least 50 events
+ddr_covariates = ['ddASCC3',
+       'ddERCC8', 'ddFANCA', 'ddHMGB2', 'ddNEIL2', 'ddNEIL3', 'ddNUDT15',
+       'ddNUDT18', 'ddPOLI', 'ddPPP4R2', 'ddPTEN', 'ddREV3L', 'ddTP53',
+       'ddWRN', 'esALKBH3', 'esDDB2', 'esEXO5', 'esFANCF', 'esHLTF', 'esMGMT',
+       'esMLH1', 'esMLH3', 'esRAD51C', 'mASCC3', 'mATM', 'mATR', 'mATRX',
+       'mBRCA1', 'mBRCA2', 'mBRIP1', 'mCDC5L', 'mCHEK2', 'mCUL3', 'mCUL5',
+       'mDDB1', 'mDNA2', 'mERCC4', 'mERCC6', 'mFANCD2', 'mFANCI', 'mFANCM',
+       'mHERC2', 'mHFM1', 'mIDH1', 'mINO80', 'mLIG4', 'mMLH1', 'mMLH3',
+       'mMSH2', 'mMSH3', 'mMSH6', 'mPARP4', 'mPER1', 'mPMS1', 'mPMS2',
+       'mPOLA1', 'mPOLD1', 'mPOLE', 'mPOLG', 'mPOLQ', 'mPPP4R4', 'mPRKDC',
+       'mPTEN', 'mRAD50', 'mRAD54B', 'mREV1', 'mREV3L', 'mRFC1', 'mRIF1',
+       'mSHPRH', 'mSMARCA4', 'mSMARCAD1', 'mSMARCC1', 'mSMC5', 'mTOPBP1',
+       'mTP53', 'mTP53BP1', 'mTTK', 'mWRN']
+# ddr_covariates = ['esRAD51C']
+cancer_type_covariates = "+".join(CANCER_TYPES)
+# ddr_covariates = [cancer_type_covariates + "+" + ddr for ddr in ddr_covariates]
 
-MIN_K=5
-MAX_K=50
-K_RANGE=range(MIN_K, MAX_K+1)
+# cancer_types + ddr + ddr*cancer_type
+def get_ddr_interaction_covariates(cancer_types, ddr_covariates):
+    output = []
+    cancer_type_covariates = "+".join(cancer_types)
+    for ddr_covariate in ddr_covariates:
+        interaction_covariates = []
+        for cancer_type in cancer_types:
+            interaction_covariates.append("{}*{}".format(ddr_covariate, cancer_type))
+        output.append("{}+{}+{}".format("+".join(interaction_covariates), cancer_type_covariates, ddr_covariate))
+    return output
+
+ddr_interaction_covariates = get_ddr_interaction_covariates(CANCER_TYPES, ddr_covariates)
+MIN_K=6
+MAX_K=20
+K_RANGE=range(MIN_K, MAX_K+1, 4)
 
 rule all:
     input:
-        expand(SIG_PLOT, covariates="+".join(CANCER_TYPES), project="TCGAPanCan", K=10),
-        # expand(LIKELIHOOD_PLOT, covariates1="+".join(CANCER_TYPES), covariates2="NULL"),
-        expand(STM_EFFECT_PLOT, covariates="+".join(CANCER_TYPES), project="TCGAPanCan", K=10),
-        expand(SIG_COSINE_PLOT, covariates="+".join(CANCER_TYPES) , K=10, project="TCGAPanCan"),
+        PANCAN_FEATURE_FILE,
+        #expand(SIG_PLOT, covariates="+".join(CANCER_TYPES), project="TCGAPanCan", K=10),
+        expand(LIKELIHOOD_PLOT, covariates1="NULL", covariates2=ddr_interaction_covariates),
+        # expand(LIKELIHOOD_PLOT, covariates1="NULL", covariates2=ddr_covariates),
+        #expand(STM_EFFECT_PLOT, covariates="+".join(CANCER_TYPES), project="TCGAPanCan", K=10),
+        #expand(SIG_COSINE_PLOT, covariates="+".join(CANCER_TYPES) , K=10, project="TCGAPanCan"),
 
 
 rule combine_stm_heldout_likelihood_files:
@@ -137,19 +179,17 @@ rule split_validate_training:
     script:
         "../src/split_training_validate_data.py"
 
-rule create_feature_file:
+rule clean_feature_mutation_count:
+    params:
+        seed=seed
     input:
-        ALL_MUTATION_COUNT_MATRIX_FILE
+        dataworkflow(RAW_MUTATION_COUNT_MATRIX_FILE),
+        # dataworkflow(POLE_EXO_FILE),
+        dataworkflow(DDR_SILENCING_FILE),
+        dataworkflow(DDR_MUTATED_FILE),
+        dataworkflow(DDR_DELETED_FILE),
     output:
+        ALL_MUTATION_COUNT_MATRIX_FILE,
         ALL_FEATURE_FILE
     script:
         "src/create_feature_file.py"
-
-
-rule download_sbs_count_data:
-    params:
-        SBS96_COUNT_URL
-    output:
-        ALL_MUTATION_COUNT_MATRIX_FILE
-    shell:
-        "wget -O {output} {params}"
