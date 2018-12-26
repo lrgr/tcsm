@@ -21,6 +21,8 @@ HR_FEATURE_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_HRd_feature.tsv")
 LST_FEATURE_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_LST_feature.tsv")
 HR_BIALLELIC_INACTIVATION_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_HR-biallelic-inactivation_Riaz2017.tsv")
 DDR_SILENCING_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_Silencing_Knijnenburg2018.tsv")
+DDR_MUTATED_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_Mutated_Knijnenburg2018.tsv")
+DDR_DELETED_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_Deleted_Knijnenburg2018.tsv")
 
 # Input files
 ALL_MUTATION_COUNT_MATRIX_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_all_mutation_count.tsv")
@@ -57,10 +59,13 @@ FOLDS=range(0, N_FOLDS)
 MIN_K=3
 MAX_K=10
 K_RANGE=range(MIN_K, MAX_K+1)
-K=[6]
+K=[7]
 # these are all the covariates that are inactivated in at least 3 patients
-covariates = ["biBRCA1", "biBRCA2", "biATM", "biCHEK2", "biFANCM",  "POLEexo",
-              "esBRCA1", "esRAD51C", "esALKBH3", "esFANCF", "esMLH3", "esMLH1"]
+biallelic_inactivation_covariates = ["biBRCA1", "biBRCA2", "biATM", "biCHEK2", "biFANCM",  "POLEexo"]
+epigenetic_silencing_covariates = ["esBRCA1", "esRAD51C", "esALKBH3", "esFANCF", "esMLH3", "esMLH1"]
+deep_deletion_covariates = ["ddPTEN", "ddNEIL2", "ddNUDT18", "ddWRN", "ddFANCA",\
+                            "ddHERC2", "ddNSMCE3", "ddNUDT15", "ddFAN1", "ddBRCA2",\
+                             "ddATM", "ddCUL5", "ddCHEK1", "ddFAAP20", "ddNEIL3", "ddERCC8"]
 predictive_covariates = ["biBRCA1", "biBRCA2", "biATM", "biCHEK2", "biFANCM",
               "esBRCA1", "esRAD51C", "esFANCF"]
 combined_covariates = "+".join(predictive_covariates)
@@ -70,14 +75,14 @@ rule all:
         #expand(LST_PLOT, covariates=["BRCA12"], cancer_type="BRCA", K=K),
         #expand(STM_BOXPLOT, covariates=["BRCA12"], cancer_type="BRCA", K=K),
         #expand(ALL_FEATURE_FILE, cancer_type="BRCA"),
-        #expand(SIG_PLOT, covariates=["BRCA12+POLE"], project="TCGA-BRCA", K=K),
-        expand(STM_EFFECT_PLOT, covariates=[covariates], project="TCGA-BRCA", K=K),
-        #expand(SIG_COSINE_PLOT, covariates=["BRCA12+POLE"] , K=K, project="TCGA-BRCA"),
+        expand(SIG_PLOT, covariates=[combined_covariates], project="TCGA-BRCA", K=K),
+        expand(STM_EFFECT_PLOT, covariates=[combined_covariates], project="TCGA-BRCA", K=K),
+        expand(SIG_COSINE_PLOT, covariates=[combined_covariates, "NULL"] , K=K, project="TCGA-BRCA"),
         # expand(STM_BOXPLOT, K=K, covariates="BRCA12", cancer_type="BRCA"),
 
 rule model_selection:
     input:
-        expand(LIKELIHOOD_PLOT, covariates1="NULL", covariates2=[covariates, combined_covariates], cancer_type="BRCA")
+        expand(LIKELIHOOD_PLOT, covariates1="NULL", covariates2=[deep_deletion_covariates], cancer_type="BRCA")
 
 rule plot_heldout_ratio:
     input:
@@ -146,6 +151,8 @@ rule clean_feature_mutation_count:
         dataworkflow(DDR_SILENCING_FILE),
         dataworkflow(LST_FEATURE_FILE),
         dataworkflow(HR_FEATURE_FILE),
+        dataworkflow(DDR_MUTATED_FILE),
+        dataworkflow(DDR_DELETED_FILE),
     output:
         ALL_MUTATION_COUNT_MATRIX_FILE,
         ALL_FEATURE_FILE
