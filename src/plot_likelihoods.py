@@ -17,12 +17,8 @@ if __name__ == '__main__':
         df.index = [model]
         output.append(df)
     df = pd.concat(output)
-    #n_samples_groups = df["n_samples"].unique()
-    print(df.index)
-    #df.index = df.index.map({"stm": "TCSM", "ctm": "TCSM (no covariates)" })
-    print(df)
+    df.index = [m.replace("BRCA+GBM+OV+LUAD+UCEC+KIRC+HNSC+LGG+THCA+LUSC+PRAD+SKCM+COAD+STAD+LAML+ESCA+PAAD", "CancerType") for m in df.index]
     models = df.index.unique()
-
 
     plt.plot(df.loc[models[0]].transpose(), color="r", marker="o")
     plt.plot(df.loc[models[1]].transpose(), color="b", marker="o")
