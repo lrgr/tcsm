@@ -1,0 +1,131 @@
+from os.path import join
+
+subworkflow dataworkflow:
+    workdir:
+        "../TCGA-data"
+
+include: '../Snakefile'
+#include: '../SomaticSignatures/Snakefile'
+include: '../signature-visualization/Snakefile'
+
+OUTPUT_DIR = 'processed'
+RAW_DIR = 'raw'
+
+wildcard_constraints:
+    cancer_type="UCEC"
+
+# Files from the TCGA-data workflow
+RAW_MUTATION_COUNT_MATRIX_FILE=join(RAW_DIR, "TCGA-{cancer_type}_mutation_count.tsv")
+POLE_EXO_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_POLE-exo_feature.tsv")
+DDR_SILENCING_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_Silencing_Knijnenburg2018.tsv")
+DDR_MUTATED_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_Mutated_Knijnenburg2018.tsv")
+DDR_DELETED_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_Deleted_Knijnenburg2018.tsv")
+
+# Input files
+ALL_MUTATION_COUNT_MATRIX_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_all_mutation_count.tsv")
+ALL_FEATURE_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_all_clinical_features.tsv")
+
+MC_FILE=join(OUTPUT_DIR, "mutation-count-all_TCGA-{cancer_type}.tsv")
+FEATURE_FILE=join(OUTPUT_DIR, "features-all_TCGA-{cancer_type}.tsv")
+
+VALIDATE_FEATURE_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_features_validate.tsv")
+VALIDATE_MC_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_mutation_count_validate.tsv")
+
+TEST_FEATURE_FILE=join(OUTPUT_DIR, "features-test_TCGA-{cancer_type}_{fold}.tsv")
+TEST_MC_FILE=join(OUTPUT_DIR, "mutation-count-test_TCGA-{cancer_type}_{fold}.tsv")
+
+TRAIN_FEATURE_FILE=join(OUTPUT_DIR, "features-train_TCGA-{cancer_type}_{fold}.tsv")
+TRAIN_MC_FILE=join(OUTPUT_DIR, "mutation-count-train_TCGA-{cancer_type}_{fold}.tsv")
+
+
+# OUTPUT FILES
+STM_HELDOUT_LIKELIHOOD_FILE=join(OUTPUT_DIR, 'stm-heldout-likelihood_{covariates}_{K}_TCGA-{cancer_type}_{fold}.tsv')
+STM_COMBINED_HELDOUT_LIKELIHOOD_FILE=join(OUTPUT_DIR, 'stm-combined-heldout_{covariates}_TCGA-{cancer_type}.tsv')
+
+LIKELIHOOD_PLOT=join(OUTPUT_DIR,'likelihood-plot_{covariates1}_{covariates2}_TCGA-{cancer_type}.pdf')
+STM_HELDOUT_LIKELIHOOD_RATIO_FILE=join(OUTPUT_DIR, 'stm-heldout-ratio_{covariates}_{K}_TCGA-{cancer_type}_{fold}.tsv')
+LST_PLOT=join(OUTPUT_DIR, "lst-scatterplot_{covariates}_{K}_TCGA-{cancer_type}.pdf")
+STM_BOXPLOT=join(OUTPUT_DIR, "stm-boxplot_{covariates}_{K}_TCGA-{cancer_type}.pdf")
+
+
+seed="123456"
+
+N_FOLDS=5
+FOLDS=range(0, N_FOLDS)
+
+MIN_K=2
+MAX_K=15
+K_RANGE=range(MIN_K, MAX_K+1)
+K=[7]
+# these are all the covariates that are inactivated in at least 3 patients
+
+rule all:
+    input:
+        #expand(LST_PLOT, covariates=["BRCA12"], cancer_type="BRCA", K=K),
+        #expand(STM_BOXPLOT, covariates=["BRCA12"], cancer_type="BRCA", K=K),
+        #expand(ALL_FEATURE_FILE, cancer_type="BRCA"),
+        #expand(SIG_PLOT, covariates=[combined_covariates], project="TCGA-BRCA", K=K),
+        # expand(STM_EFFECT_PLOT, covariates=combined_covariates, project="TCGA-BRCA", K=K),
+        #expand(SIG_COSINE_PLOT, covariates=[combined_covariates, "NULL"] , K=K, project="TCGA-BRCA"),
+        expand(STM_BOXPLOT, K=K, covariates="POLEexo", cancer_type="UCEC"),
+
+rule model_selection:
+    input:
+        expand(LIKELIHOOD_PLOT, covariates1="NULL", covariates2=["POLEexo"], cancer_type="UCEC")
+
+
+rule combine_stm_heldout_likelihood_files:
+    input:
+        expand(STM_HELDOUT_LIKELIHOOD_FILE, K = K_RANGE,
+               cancer_type="{cancer_type}", fold=FOLDS, covariates="{covariates}")
+    output:
+        STM_COMBINED_HELDOUT_LIKELIHOOD_FILE
+    script:
+        "../src/combine_heldout_likelihood_files.py"
+
+
+rule split_test_training_data:
+    input:
+        MC_FILE,
+        FEATURE_FILE
+    params:
+        seed=seed,
+        n_folds=N_FOLDS
+    output:
+        TEST_MC_FILE,
+        TRAIN_MC_FILE,
+        TEST_FEATURE_FILE,
+        TRAIN_FEATURE_FILE
+    script:
+        "../src/split_test_training_data.py"
+
+
+rule split_validate_training:
+    input:
+        ALL_MUTATION_COUNT_MATRIX_FILE,
+        ALL_FEATURE_FILE
+    params:
+        seed=seed
+    output:
+        VALIDATE_MC_FILE,
+        MC_FILE,
+        VALIDATE_FEATURE_FILE,
+        FEATURE_FILE
+    script:
+        "../src/split_training_validate_data.py"
+
+
+rule clean_feature_mutation_count:
+    params:
+        seed=seed
+    input:
+        dataworkflow(RAW_MUTATION_COUNT_MATRIX_FILE),
+        dataworkflow(POLE_EXO_FILE),
+        dataworkflow(DDR_SILENCING_FILE),
+        dataworkflow(DDR_DELETED_FILE),
+        dataworkflow(DDR_MUTATED_FILE),
+    output:
+        ALL_MUTATION_COUNT_MATRIX_FILE,
+        ALL_FEATURE_FILE
+    script:
+        "src/create_feature_file.py"
