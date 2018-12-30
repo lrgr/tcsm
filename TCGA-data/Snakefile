@@ -14,7 +14,7 @@ RAW_DDR_SILENCING_FILE=join(RAW_DIR, "TCGA-{cancer_type}_Silencing_Knijnenburg20
 RAW_DDR_MUTATED_FILE=join(RAW_DIR, "TCGA-{cancer_type}_Mutations_Knijnenburg2018.tsv")
 RAW_DDR_DELETED_FILE=join(RAW_DIR, "TCGA-{cancer_type}_Deletions_Knijnenburg2018.tsv")
 RAW_LST_FILE=join(RAW_DIR, "TCGA-{cancer_type}_LST_Riaz2017.tsv")
-RAW_POLE_FILE=join(RAW_DIR, "classify_POLE_in_TCGA-{cancer_type}_mc3.v0.2.8.SBS.tsv")
+RAW_POLE_FILE=join(RAW_DIR, "classify_POLE_in_TCGA-BRCA_mc3.v0.2.8.SBS.tsv") # update later when fixed
 RAW_MUTATION_COUNT_MATRIX_FILE=join(RAW_DIR, "TCGA-{cancer_type}_mutation_count.tsv")
 # Processed files
 POLE_EXO_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_POLE-exo_feature.tsv")
