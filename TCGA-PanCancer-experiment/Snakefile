@@ -86,9 +86,9 @@ K_RANGE=range(MIN_K, MAX_K+1, 4)
 
 rule all:
     input:
-        PANCAN_FEATURE_FILE,
-        #expand(SIG_PLOT, covariates="+".join(CANCER_TYPES), project="TCGAPanCan", K=10),
-        expand(LIKELIHOOD_PLOT, covariates1="NULL", covariates2=ddr_interaction_covariates),
+        PANCAN_MC_FILE,
+        # expand(SIG_PLOT, covariates="+".join(CANCER_TYPES), project="TCGAPanCan", K=10),
+        # expand(LIKELIHOOD_PLOT, covariates1="NULL", covariates2=ddr_interaction_covariates),
         # expand(LIKELIHOOD_PLOT, covariates1="NULL", covariates2=ddr_covariates),
         #expand(STM_EFFECT_PLOT, covariates="+".join(CANCER_TYPES), project="TCGAPanCan", K=10),
         #expand(SIG_COSINE_PLOT, covariates="+".join(CANCER_TYPES) , K=10, project="TCGAPanCan"),
@@ -184,7 +184,7 @@ rule clean_feature_mutation_count:
         seed=seed
     input:
         dataworkflow(RAW_MUTATION_COUNT_MATRIX_FILE),
-        # dataworkflow(POLE_EXO_FILE),
+        dataworkflow(POLE_EXO_FILE),
         dataworkflow(DDR_SILENCING_FILE),
         dataworkflow(DDR_MUTATED_FILE),
         dataworkflow(DDR_DELETED_FILE),

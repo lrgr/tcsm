@@ -1,18 +1,37 @@
 Cancer-Types:
-  - BRCA
-  - GBM
-  - OV
-  - LUAD
-  - UCEC
-  - KIRC
-  - HNSC
-  - LGG
-  - THCA
-  - LUSC
-  - PRAD
-  - SKCM
-  - COAD
-  - STAD
   - LAML
+  - ACC
+  - BLCA
+  - LGG
+  - BRCA
+  - CESC
+  - CHOL
+  - COAD
   - ESCA
-  - PAAD 
+  - GBM
+  - HNSC
+  - KICH
+  - KIRC
+  - KIRP
+  - LIHC
+  - LUAD
+  - LUSC
+  - DLBC
+  - MESO
+  - OV
+  - PAAD
+  - PCPG
+  - PRAD
+  - READ
+  - SARC
+  - SKCM
+  - STAD
+  - TGCT
+  - THYM
+  - THCA
+  - UCS
+  - UCEC
+  - UVM
+
+
+  - THCA
