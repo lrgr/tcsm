@@ -13,6 +13,15 @@ wildcard_constraints:
 RAW_DIR = 'raw'
 OUTPUT_DIR = 'processed'
 
+#
+MC_FILE=join(OUTPUT_DIR, "mutation-count-{partition}_{project}.tsv")
+ALL_MC_FILE=join(OUTPUT_DIR, "mutation-count-all_{project}.tsv")
+FEATURE_FILE=join(OUTPUT_DIR, "features-all_{project}.tsv")
+TRAIN_MC_FILE=join(OUTPUT_DIR, "mutation-count-train_{project}.tsv")
+TRAIN_FEATURE_FILE=join(OUTPUT_DIR, "features-train_{project}.tsv")
+TEST_MC_FILE=join(OUTPUT_DIR, "mutation-count-test_{project}.tsv")
+TEST_FEATURE_FILE=join(OUTPUT_DIR, "features-test_{project}.tsv")
+
 # Files from TCGA-data subworkflow
 RAW_MUTATION_COUNT_MATRIX_FILE=join(RAW_DIR, "TCGA-{cancer_type}_mutation_count.tsv")
 POLE_EXO_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_POLE-exo_feature.tsv")
@@ -20,6 +29,7 @@ DDR_SILENCING_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_Silencing_Knijnenburg201
 DDR_MUTATED_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_Mutated_Knijnenburg2018.tsv")
 DDR_DELETED_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_Deleted_Knijnenburg2018.tsv")
 
+# these files include the test/train data and the validation data
 ALL_MUTATION_COUNT_MATRIX_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_all_mutation_count.tsv")
 ALL_FEATURE_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_all_features.tsv")
 
@@ -36,10 +46,11 @@ PANCAN_TEST_MC_FILE=join(OUTPUT_DIR, "mutation-count-test_TCGAPanCan_{fold}.tsv"
 PANCAN_TRAIN_FEATURE_FILE=join(OUTPUT_DIR, "features-train_TCGAPanCan_{fold}.tsv")
 PANCAN_TRAIN_MC_FILE=join(OUTPUT_DIR, "mutation-count-train_TCGAPanCan_{fold}.tsv")
 
-MC_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_mutation_count.tsv")
-PANCAN_MC_FILE=join(OUTPUT_DIR, "TCGAPanCan_mutation_count.tsv")
-FEATURE_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_features.tsv")
-PANCAN_FEATURE_FILE=join(OUTPUT_DIR, "TCGAPanCan_features.tsv")
+# these files contain the combined test/train data
+MC_FILE=join(OUTPUT_DIR, "mutation-count-all_TCGA-{cancer_type}.tsv")
+PANCAN_MC_FILE=join(OUTPUT_DIR, "mutation-count-all_TCGAPanCan.tsv")
+FEATURE_FILE=join(OUTPUT_DIR, "features-all_TCGA-{cancer_type}.tsv")
+PANCAN_FEATURE_FILE=join(OUTPUT_DIR, "features-all_TCGAPanCan.tsv")
 STM_HELDOUT_LIKELIHOOD_FILE=join(OUTPUT_DIR, 'stm-heldout-likelihood_{covariates}_{K}_TCGAPanCan_{fold}.tsv')
 STM_COMBINED_HELDOUT_LIKELIHOOD_FILE=join(OUTPUT_DIR, 'stm-combined-heldout_{covariates}_TCGAPanCan.tsv')
 LIKELIHOOD_PLOT=join(OUTPUT_DIR,'likelihood-plot_{covariates1}_{covariates2}_TCGAPanCan.pdf')
@@ -80,15 +91,15 @@ def get_ddr_interaction_covariates(cancer_types, ddr_covariates):
     return output
 
 ddr_interaction_covariates = get_ddr_interaction_covariates(CANCER_TYPES, ddr_covariates)
-MIN_K=6
-MAX_K=20
-K_RANGE=range(MIN_K, MAX_K+1, 4)
+MIN_K=5
+MAX_K=40
+K_RANGE=range(MIN_K, MAX_K+1, 1)
 
 rule all:
     input:
-        PANCAN_MC_FILE,
-        # expand(SIG_PLOT, covariates="+".join(CANCER_TYPES), project="TCGAPanCan", K=10),
-        # expand(LIKELIHOOD_PLOT, covariates1="NULL", covariates2=ddr_interaction_covariates),
+        # PANCAN_MC_FILE,
+        #expand(SIG_PLOT, covariates="+".join(CANCER_TYPES), project="TCGAPanCan", K=10),
+        expand(LIKELIHOOD_PLOT, covariates1="NULL", covariates2="+".join(CANCER_TYPES)),
         # expand(LIKELIHOOD_PLOT, covariates1="NULL", covariates2=ddr_covariates),
         #expand(STM_EFFECT_PLOT, covariates="+".join(CANCER_TYPES), project="TCGAPanCan", K=10),
         #expand(SIG_COSINE_PLOT, covariates="+".join(CANCER_TYPES) , K=10, project="TCGAPanCan"),
