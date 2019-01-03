@@ -83,7 +83,7 @@ rule all:
 
 rule model_selection:
     input:
-        expand(LIKELIHOOD_PLOT, covariates1="biBRCA1+esBRCA1", covariates2="BRCA1", cancer_type="BRCA")
+        expand(LIKELIHOOD_PLOT, zip, covariates1=["biBRCA1+esBRCA1", "BRCA1+BRCA2", "BRCA1+BRCA2+RAD51C", "BRCA1+BRCA2+RAD51C+ATM", "BRCA1+BRCA2+RAD51C+FANCM", "BRCA1+BRCA2+RAD51C+FANCF"], covariates2=["BRCA1", "BRCA1&BRCA2", "BRCA1&BRCA2&RAD51C", "BRCA1&BRCA2&RAD51C&ATM", "BRCA1&BRCA2&RAD51C&FANCM", "BRCA1&BRCA2&RAD51C&FANCF"], cancer_type="BRCA")
 
 rule plot_topic_exposures:
     input:
