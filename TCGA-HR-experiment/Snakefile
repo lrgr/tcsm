@@ -5,14 +5,14 @@ subworkflow dataworkflow:
         "../TCGA-data"
 
 include: '../Snakefile'
-#include: '../SomaticSignatures/Snakefile'
+include: '../SomaticSignatures/Snakefile'
 include: '../signature-visualization/Snakefile'
 
 OUTPUT_DIR = 'processed'
 RAW_DIR = 'raw'
 
 wildcard_constraints:
-    cancer_type="BRCA|OV"
+    cancer_type="BRCA"
 
 # Files from the TCGA-data workflow
 RAW_MUTATION_COUNT_MATRIX_FILE=join(RAW_DIR, "TCGA-{cancer_type}_mutation_count.tsv")
@@ -44,11 +44,12 @@ TRAIN_MC_FILE=join(OUTPUT_DIR, "mutation-count-train_TCGA-{cancer_type}_{fold}.t
 # OUTPUT FILES
 STM_HELDOUT_LIKELIHOOD_FILE=join(OUTPUT_DIR, 'stm-heldout-likelihood_{covariates}_{K}_TCGA-{cancer_type}_{fold}.tsv')
 STM_COMBINED_HELDOUT_LIKELIHOOD_FILE=join(OUTPUT_DIR, 'stm-combined-heldout_{covariates}_TCGA-{cancer_type}.tsv')
-
+STM_ALL_NORMALIZED_EXPOSURES_FILE=join(OUTPUT_DIR, 'stm-all-normalized-exposures_{covariates}_{K}_TCGA-{cancer_type}.tsv')
 LIKELIHOOD_PLOT=join(OUTPUT_DIR,'likelihood-plot_{covariates1}_{covariates2}_TCGA-{cancer_type}.pdf')
 STM_HELDOUT_LIKELIHOOD_RATIO_FILE=join(OUTPUT_DIR, 'stm-heldout-ratio_{covariates}_{K}_TCGA-{cancer_type}_{fold}.tsv')
 LST_PLOT=join(OUTPUT_DIR, "lst-scatterplot_{covariates}_{K}_TCGA-{cancer_type}.pdf")
-STM_BOXPLOT=join(OUTPUT_DIR, "stm-boxplot_{covariates}_{K}_TCGA-{cancer_type}.pdf")
+STM_BOXPLOT=join(OUTPUT_DIR, "stm-boxplot_{covariates}_{K}_TCGA-{cancer_type}.png")
+TOPIC_EXPOSURE_PLOT=join(OUTPUT_DIR, "stm-exposure-plot_{covariates}_{K}_TCGA-{cancer_type}_{topic}.png")
 
 
 seed="123456"
@@ -57,7 +58,7 @@ N_FOLDS=5
 FOLDS=range(0, N_FOLDS)
 
 MIN_K=2
-MAX_K=10
+MAX_K=20
 K_RANGE=range(MIN_K, MAX_K+1)
 K=[7]
 # these are all the covariates that are inactivated in at least 3 patients
@@ -65,21 +66,33 @@ biallelic_inactivation_covariates = ["biBRCA1", "biBRCA2", "biATM", "biCHEK2", "
 epigenetic_silencing_covariates = ["esBRCA1", "esRAD51C", "esALKBH3", "esFANCF", "esMLH3", "esMLH1"]
 predictive_covariates = ["biBRCA1", "biBRCA2", "biATM", "biCHEK2", "biFANCM",
               "esBRCA1", "esRAD51C", "esFANCF"]
+
 combined_covariates = "+".join(predictive_covariates)
 
 rule all:
     input:
+        # expand(TOPIC_EXPOSURE_PLOT, covariates=[combined_covariates, "NULL"], K=K, cancer_type="BRCA", topic="Topic6"),
         #expand(LST_PLOT, covariates=["BRCA12"], cancer_type="BRCA", K=K),
         #expand(STM_BOXPLOT, covariates=["BRCA12"], cancer_type="BRCA", K=K),
         #expand(ALL_FEATURE_FILE, cancer_type="BRCA"),
         #expand(SIG_PLOT, covariates=[combined_covariates], project="TCGA-BRCA", K=K),
-        expand(STM_EFFECT_PLOT, covariates=combined_covariates, project="TCGA-BRCA", K=K),
-        #expand(SIG_COSINE_PLOT, covariates=[combined_covariates, "NULL"] , K=K, project="TCGA-BRCA"),
-        # expand(STM_BOXPLOT, K=K, covariates="BRCA12", cancer_type="BRCA"),
+        #expand(STM_EFFECT_PLOT, covariates=combined_covariates, project="TCGA-LUAD", K=K),
+        #expand(SIG_COSINE_PLOT, covariates=["NULL", combined_covariates], K=K, project="TCGA-LUAD"),
+        #expand(STM_BOXPLOT, K=K, covariates="BRCA12", cancer_type="BRCA"),
+        # expand(SS_NUM_SIG_FILE, project=["TCGA-BRCA"])
 
 rule model_selection:
     input:
-        expand(LIKELIHOOD_PLOT, covariates1="NULL", covariates2=[deep_deletion_covariates], cancer_type="BRCA")
+        expand(LIKELIHOOD_PLOT, covariates1="NULL", covariates2=combined_covariates, cancer_type="BRCA")
+
+rule plot_topic_exposures:
+    input:
+        STM_ALL_NORMALIZED_EXPOSURES_FILE,
+        FEATURE_FILE
+    output:
+        TOPIC_EXPOSURE_PLOT
+    script:
+        "src/plot_exposures.py"
 
 rule plot_heldout_ratio:
     input:
@@ -143,7 +156,6 @@ rule clean_feature_mutation_count:
         seed=seed
     input:
         dataworkflow(RAW_MUTATION_COUNT_MATRIX_FILE),
-        dataworkflow(POLE_EXO_FILE),
         dataworkflow(HR_BIALLELIC_INACTIVATION_FILE),
         dataworkflow(DDR_SILENCING_FILE),
         dataworkflow(LST_FEATURE_FILE),
