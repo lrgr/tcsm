@@ -83,7 +83,7 @@ rule all:
 
 rule model_selection:
     input:
-        expand(LIKELIHOOD_PLOT, covariates1="NULL", covariates2=combined_covariates, cancer_type="BRCA")
+        expand(LIKELIHOOD_PLOT, covariates1="biBRCA1+esBRCA1", covariates2="BRCA1", cancer_type="BRCA")
 
 rule plot_topic_exposures:
     input:
