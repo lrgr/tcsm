@@ -13,14 +13,6 @@ wildcard_constraints:
 RAW_DIR = 'raw'
 OUTPUT_DIR = 'processed'
 
-#
-MC_FILE=join(OUTPUT_DIR, "mutation-count-{partition}_{project}.tsv")
-ALL_MC_FILE=join(OUTPUT_DIR, "mutation-count-all_{project}.tsv")
-FEATURE_FILE=join(OUTPUT_DIR, "features-all_{project}.tsv")
-TRAIN_MC_FILE=join(OUTPUT_DIR, "mutation-count-train_{project}.tsv")
-TRAIN_FEATURE_FILE=join(OUTPUT_DIR, "features-train_{project}.tsv")
-TEST_MC_FILE=join(OUTPUT_DIR, "mutation-count-test_{project}.tsv")
-TEST_FEATURE_FILE=join(OUTPUT_DIR, "features-test_{project}.tsv")
 
 # Files from TCGA-data subworkflow
 RAW_MUTATION_COUNT_MATRIX_FILE=join(RAW_DIR, "TCGA-{cancer_type}_mutation_count.tsv")
@@ -55,6 +47,7 @@ STM_HELDOUT_LIKELIHOOD_FILE=join(OUTPUT_DIR, 'stm-heldout-likelihood_{covariates
 STM_COMBINED_HELDOUT_LIKELIHOOD_FILE=join(OUTPUT_DIR, 'stm-combined-heldout_{covariates}_TCGAPanCan.tsv')
 LIKELIHOOD_PLOT=join(OUTPUT_DIR,'likelihood-plot_{covariates1}_{covariates2}_TCGAPanCan.pdf')
 STM_SIGNATURES_FILE=join(OUTPUT_DIR, 'stm-signatures_{covariates}_{K}_{project}.tsv')
+CANCER_HIERARCHY_FILE=join("data", "cancer_type_hierarchy.yml")
 # PARAMETERS
 seed="123456"
 N_FOLDS=5
@@ -76,7 +69,9 @@ ddr_covariates = ['ddASCC3',
        'mSHPRH', 'mSMARCA4', 'mSMARCAD1', 'mSMARCC1', 'mSMC5', 'mTOPBP1',
        'mTP53', 'mTP53BP1', 'mTTK', 'mWRN']
 # ddr_covariates = ['esRAD51C']
+cancer_hierarchy_covariates = "+".join(["HELY", "GYN", "UR", "END", "CG", "DG", "THOR", "CNS", "ST", "MEL"])
 cancer_type_covariates = "+".join(CANCER_TYPES)
+
 # ddr_covariates = [cancer_type_covariates + "+" + ddr for ddr in ddr_covariates]
 
 # cancer_types + ddr + ddr*cancer_type
@@ -98,8 +93,8 @@ K_RANGE=range(MIN_K, MAX_K+1, 1)
 rule all:
     input:
         # PANCAN_MC_FILE,
-        #expand(SIG_PLOT, covariates="+".join(CANCER_TYPES), project="TCGAPanCan", K=10),
-        expand(LIKELIHOOD_PLOT, covariates1="NULL", covariates2="+".join(CANCER_TYPES)),
+        expand(SIG_PLOT, covariates="+".join([cancer_type_covariates, cancer_hierarchy_covariates]), project="TCGAPanCan", K=10),
+        # expand(LIKELIHOOD_PLOT, covariates1="NULL", covariates2="+".join([cancer_type_covariates, cancer_hierarchy_covariates])),
         # expand(LIKELIHOOD_PLOT, covariates1="NULL", covariates2=ddr_covariates),
         #expand(STM_EFFECT_PLOT, covariates="+".join(CANCER_TYPES), project="TCGAPanCan", K=10),
         #expand(SIG_COSINE_PLOT, covariates="+".join(CANCER_TYPES) , K=10, project="TCGAPanCan"),
@@ -195,6 +190,7 @@ rule clean_feature_mutation_count:
         seed=seed
     input:
         dataworkflow(RAW_MUTATION_COUNT_MATRIX_FILE),
+        CANCER_HIERARCHY_FILE,
         dataworkflow(POLE_EXO_FILE),
         dataworkflow(DDR_SILENCING_FILE),
         dataworkflow(DDR_MUTATED_FILE),

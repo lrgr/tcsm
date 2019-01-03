@@ -27,10 +27,13 @@ IN_SAMPLE_PR_FILE_MC=join(OUTPUT_DIR, 'linear-svm-pr_mutation_counts.tsv')
 IN_SAMPLE_PR_LST_FILE=join(OUTPUT_DIR, 'linear-svm-pr_lst.tsv')
 HELDOUT_PR_FILE=join(OUTPUT_DIR, 'linear-svm-heldout-pr_{norm}_{covariates}_{K}.tsv')
 
-S1 = STM_TRAIN_SIGNATURES_FILE.format(covariates="NULL", K=6, fold=0)
-S2 = STM_TRAIN_SIGNATURES_FILE.format(covariates="NULL", K=6, fold=3)
-SIG_COSINE_PLOT =join(OUTPUT_DIR, "cosine-similarity-null-0-3.pdf")
-SIG_COSINE_SIM =join(OUTPUT_DIR, "cosine-similarity-null-0-3.tsv")
+# S1 = STM_TRAIN_SIGNATURES_FILE.format(covariates="NULL", K=6, fold=0)
+# S2 = STM_TRAIN_SIGNATURES_FILE.format(covariates="NULL", K=6, fold=3)
+# SIG_COSINE_PLOT =join(OUTPUT_DIR, "cosine-similarity-null-0-3.pdf")
+# SIG_COSINE_SIM =join(OUTPUT_DIR, "cosine-similarity-null-0-3.tsv")
+
+predictive_covariates = ["biBRCA1", "biBRCA2", "esBRCA1", "esRAD51C"]
+combined_covariates = "+".join(predictive_covariates)
 
 N_FOLDS=5
 FOLDS=range(0, N_FOLDS)
@@ -41,7 +44,7 @@ rule predict_all:
         # expand(STM_ALL_EXPOSURES_FILE, covariates=["LST", "BRCA12", "NULL"], K=K, norm=['count', 'normalized']),
         # expand(STM_TRAIN_EXPOSURES_FILE, covariates=["BRCA12", "NULL"], K=K, norm=['count', 'normalized'], fold=FOLDS),
         # expand(STM_TEST_EXPOSURES_FILE, covariates=["BRCA12", "NULL"], K=K, norm=['count', 'normalized'], fold=FOLDS),
-        expand(IN_SAMPLE_PR_FILE, covariates=["LST", "NULL", "BRCA12"], K=K, norm=['count', 'normalized']),
+        expand(IN_SAMPLE_PR_FILE, covariates=["LST", "NULL", "BRCA12", combined_covariates], K=K, norm=['count', 'normalized']),
         # IN_SAMPLE_PR_FILE_MC,
         # IN_SAMPLE_PR_LST_FILE,
         # expand(HELDOUT_PR_FILE, covariates=["NULL", "BRCA12"], K=K, norm=['count', 'normalized']),

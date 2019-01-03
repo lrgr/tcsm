@@ -1,0 +1,97 @@
+LAML:
+  - HELY
+  - LAML
+DLBC:
+  - HELY
+  - DLBC
+THYM:
+  - HELY
+  - THYM
+OV:
+  - GYN
+  - OV
+UCEC:
+  - GYN
+  - UCEC
+CESC:
+  - GYN
+  - CESC
+BRCA:
+  - GYN
+  - BRCA
+BLCA:
+  - UR
+  - BLCA
+PRAD:
+  - UR
+  - PRAD
+TGCT:
+  - UR
+  - TGCT
+KIRC:
+  - UR
+  - KIRC
+KICH:
+  - UR
+  - KICH
+KIRP:
+  - UR
+  - KIRP
+THCA:
+  - END
+  - THCA
+ACC:
+  - END
+  - ACC
+ESCA:
+  - CG
+  - ESCA
+STAD:
+  - CG
+  - STAD
+COAD:
+  - CG
+  - COAD
+READ:
+  - CG
+  - READ
+LIHC:
+  - DG
+  - LIHC
+PAAD:
+  - DG
+  - PAAD
+CHOL:
+  - DG
+  - CHOL
+LUAD:
+  - THOR
+  - LUAD
+LUSC:
+  - THOR
+  - LUSC
+MESO:
+  - THOR
+  - MESO
+GBM:
+  - CNS
+  - GBM
+LGG:
+  - CNS
+  - LGG
+SARC:
+  - ST
+  - SARC
+UCS:
+  - ST
+  - UCS
+SKCM:
+  - MEL
+  - SKCM
+UVM:
+  - MEL
+  - UVM
+HNSC:
+  - HNSC
+PCPG:
+  - PCPG

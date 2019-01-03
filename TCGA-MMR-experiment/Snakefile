@@ -56,18 +56,19 @@ FOLDS=range(0, N_FOLDS)
 MIN_K=2
 MAX_K=15
 K_RANGE=range(MIN_K, MAX_K+1)
-K=[7]
+K=[5]
 # these are all the covariates that are inactivated in at least 3 patients
-
+covariates = ["POLEexo", "esMLH1", "POLEexo*esMLH1", "mMSH6", "mMSH3", "mMSH2", "esSHPRH", "mPOLD1"]
+combined_covariates = "+".join(covariates)
 rule all:
     input:
         #expand(LST_PLOT, covariates=["BRCA12"], cancer_type="BRCA", K=K),
         #expand(STM_BOXPLOT, covariates=["BRCA12"], cancer_type="BRCA", K=K),
         #expand(ALL_FEATURE_FILE, cancer_type="BRCA"),
-        #expand(SIG_PLOT, covariates=[combined_covariates], project="TCGA-BRCA", K=K),
-        # expand(STM_EFFECT_PLOT, covariates=combined_covariates, project="TCGA-BRCA", K=K),
-        #expand(SIG_COSINE_PLOT, covariates=[combined_covariates, "NULL"] , K=K, project="TCGA-BRCA"),
-        expand(STM_BOXPLOT, K=K, covariates="POLEexo", cancer_type="UCEC"),
+        expand(SIG_PLOT, covariates=combined_covariates, project="TCGA-UCEC", K=K),
+        expand(STM_EFFECT_PLOT, covariates=combined_covariates, project="TCGA-UCEC", K=K),
+        expand(SIG_COSINE_PLOT, covariates=combined_covariates , K=K, project="TCGA-UCEC"),
+        # expand(STM_BOXPLOT, K=K, covariates=, cancer_type="UCEC"),
 
 rule model_selection:
     input:
