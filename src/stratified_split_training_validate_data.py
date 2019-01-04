@@ -9,7 +9,7 @@ if __name__ == '__main__':
     sss = StratifiedShuffleSplit(n_splits=1, test_size=.25, random_state=random_state)
     assert((mc_df.index == feature_df.index).all())
     print(feature_df)
-    for train_index, test_index in sss.split(feature_df.index, feature_df["BRCA12"]):
+    for train_index, test_index in sss.split(feature_df.index, feature_df[snakemake.params["feature"]]):
         mc_df.iloc[test_index].to_csv(snakemake.output[0], sep="\t")
         mc_df.iloc[train_index].to_csv(snakemake.output[1], sep="\t")
         feature_df.iloc[test_index].to_csv(snakemake.output[2], sep="\t")

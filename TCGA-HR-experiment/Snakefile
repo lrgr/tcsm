@@ -5,7 +5,7 @@ subworkflow dataworkflow:
         "../TCGA-data"
 
 include: '../Snakefile'
-#include: '../SomaticSignatures/Snakefile'
+include: '../SomaticSignatures/Snakefile'
 include: '../signature-visualization/Snakefile'
 
 OUTPUT_DIR = 'processed'
@@ -71,19 +71,19 @@ combined_covariates = "+".join(predictive_covariates)
 
 rule all:
     input:
-        expand(TOPIC_EXPOSURE_PLOT, covariates=["LST"], K=K, cancer_type="BRCA", topic="Topic8"),
+        # expand(TOPIC_EXPOSURE_PLOT, covariates=["LST"], K=K, cancer_type="BRCA", topic="Topic8"),
         #expand(LST_PLOT, covariates=["BRCA12"], cancer_type="BRCA", K=K),
         #expand(STM_BOXPLOT, covariates=["BRCA12"], cancer_type="BRCA", K=K),
         #expand(ALL_FEATURE_FILE, cancer_type="BRCA"),
-        expand(SIG_PLOT, covariates=["LST"], project="TCGA-BRCA", K=K),
+        # expand(SIG_PLOT, covariates=["LST"], project="TCGA-BRCA", K=K),
         #expand(STM_EFFECT_PLOT, covariates=combined_covariates, project="TCGA-LUAD", K=K),
-        expand(SIG_COSINE_PLOT, covariates=["LST"], K=K, project="TCGA-BRCA"),
+        # expand(SIG_COSINE_PLOT, covariates=["LST"], K=K, project="TCGA-BRCA"),
         # expand(STM_BOXPLOT, K=K, covariates="BRCA12", cancer_type="BRCA"),
-        # expand(SS_NUM_SIG_FILE, project=["TCGA-BRCA"])
+        expand(SS_NUM_SIG_FILE, project=["TCGA-BRCA"]),
 
 rule model_selection:
     input:
-        expand(LIKELIHOOD_PLOT, covariates1=["BRCA1+BRCA2"], covariates2=["BRCA12", "BRCA1&BRCA2"], cancer_type="BRCA")
+        expand(LIKELIHOOD_PLOT, covariates1=["NULL"], covariates2=["BRCA1BRCA2RAD51C"], cancer_type="BRCA")
 
 rule plot_topic_exposures:
     input:
@@ -126,14 +126,15 @@ rule split_test_training_data:
         FEATURE_FILE
     params:
         seed=seed,
-        n_folds=N_FOLDS
+        n_folds=N_FOLDS,
+        feature="HR Status"
     output:
         TEST_MC_FILE,
         TRAIN_MC_FILE,
         TEST_FEATURE_FILE,
         TRAIN_FEATURE_FILE
     script:
-        "../src/split_test_training_data.py"
+        "../src/stratified_split_test_training_data.py"
 
 
 rule split_validate_training:
@@ -141,14 +142,15 @@ rule split_validate_training:
         ALL_MUTATION_COUNT_MATRIX_FILE,
         ALL_FEATURE_FILE
     params:
-        seed=seed
+        seed=seed,
+        feature="HR Status"
     output:
         VALIDATE_MC_FILE,
         MC_FILE,
         VALIDATE_FEATURE_FILE,
         FEATURE_FILE
     script:
-        "../src/split_training_validate_data.py"
+        "../src/stratified_split_training_validate_data.py"
 
 
 rule clean_feature_mutation_count:

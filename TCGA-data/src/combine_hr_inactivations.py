@@ -1,5 +1,14 @@
 import pandas as pd
 
+def get_hr_status(row):
+    if row["BRCA1"] == 1:
+        return "BRCA1"
+    if row["BRCA2"] == 1:
+        return "BRCA2"
+    if row["RAD51C"] == 1:
+        return "RAD51C"
+    return "wildtype"
+
 if __name__ == '__main__':
     bi_inactivation_df = pd.read_csv(snakemake.input[0], sep="\t", index_col=0)
     silencing_df = pd.read_csv(snakemake.input[1], sep="\t", index_col=0)
@@ -11,11 +20,15 @@ if __name__ == '__main__':
     silencing_df = silencing_df[genes]
     bi_inactivation_df = bi_inactivation_df[genes]
     feature_df = bi_inactivation_df + silencing_df
-    feature_df["BRCA1&BRCA2"] = feature_df["BRCA1"] + feature_df["BRCA2"]
-    feature_df["BRCA12"] = feature_df["BRCA1"] + feature_df["BRCA2"]
-    # feature_df["BRCA1&BRCA2&RAD51C"] = feature_df["BRCA1&BRCA2"] + feature_df["RAD51C"]
-    # feature_df["BRCA1&BRCA2&RAD51C&ATM"] = feature_df["BRCA1&BRCA2&RAD51C"] + feature_df["ATM"]
-    # feature_df["BRCA1&BRCA2&RAD51C&FANCM"] = feature_df["BRCA1&BRCA2&RAD51C"] + feature_df["FANCM"]
-    # feature_df["BRCA1&BRCA2&RAD51C&FANCF"] = feature_df["BRCA1&BRCA2&RAD51C"] + feature_df["FANCF"]
+    feature_df["HR Status"] = feature_df.apply(get_hr_status, axis=1)
+    feature_df["BRCA1BRCA2"] = feature_df["BRCA1"] + feature_df["BRCA2"]
+    feature_df["BRCA1BRCA2RAD51C"] = feature_df["BRCA1BRCA2"] + feature_df["RAD51C"]
+    feature_df["BRCA1BRCA2RAD51C"] = feature_df["BRCA1BRCA2RAD51C"].apply(lambda x: min(x, 1))
+    feature_df["BRCA1BRCA2RAD51CATM"] = feature_df["BRCA1BRCA2RAD51C"] + feature_df["ATM"]
+    feature_df["BRCA1BRCA2RAD51CATM"] = feature_df["BRCA1BRCA2RAD51CATM"].apply(lambda x: min(x, 1))
+    feature_df["BRCA1BRCA2RAD51CFANCM"] = feature_df["BRCA1BRCA2RAD51C"] + feature_df["FANCM"]
+    feature_df["BRCA1BRCA2RAD51CFANCM"] = feature_df["BRCA1BRCA2RAD51CFANCM"].apply(lambda x: min(x, 1))
+    feature_df["BRCA1BRCA2RAD51CFANCF"] = feature_df["BRCA1BRCA2RAD51C"] + feature_df["FANCF"]
+    feature_df["BRCA1BRCA2RAD51CFANCF"] = feature_df["BRCA1BRCA2RAD51CFANCF"].apply(lambda x: min(x, 1))
     feature_df = feature_df.sort_index()
     feature_df.to_csv(snakemake.output[0], sep="\t")
