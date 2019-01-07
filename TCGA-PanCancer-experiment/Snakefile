@@ -46,8 +46,10 @@ PANCAN_FEATURE_FILE=join(OUTPUT_DIR, "features-all_TCGAPanCan.tsv")
 STM_HELDOUT_LIKELIHOOD_FILE=join(OUTPUT_DIR, 'stm-heldout-likelihood_{covariates}_{K}_TCGAPanCan_{fold}.tsv')
 STM_COMBINED_HELDOUT_LIKELIHOOD_FILE=join(OUTPUT_DIR, 'stm-combined-heldout_{covariates}_TCGAPanCan.tsv')
 LIKELIHOOD_PLOT=join(OUTPUT_DIR,'likelihood-plot_{covariates1}_{covariates2}_TCGAPanCan.pdf')
-STM_SIGNATURES_FILE=join(OUTPUT_DIR, 'stm-signatures_{covariates}_{K}_{project}.tsv')
+STM_SIGNATURES_FILE=join(OUTPUT_DIR, 'stm-exome-signatures_{covariates}_{K}_{project}.tsv')
 CANCER_HIERARCHY_FILE=join("data", "cancer_type_hierarchy.yml")
+COS_SIM_CANCER_TYPE_NULL_COV_PLOT=join(OUTPUT_DIR, "stm-cancer-type-null-covariate_{K}.pdf")
+COS_SIM_CANCER_TYPE_NULL_COV_VALS=join(OUTPUT_DIR, "stm-cancer-type-null-covariate_{K}.tsv")
 # PARAMETERS
 seed="123456"
 N_FOLDS=5
@@ -94,6 +96,19 @@ rule all:
     input:
         expand(LIKELIHOOD_PLOT, covariates1=cancer_type_covariates, covariates2="+".join([cancer_type_covariates, cancer_hierarchy_covariates])),
 
+rule compare_signatures_10:
+    input:
+        COS_SIM_CANCER_TYPE_NULL_COV_PLOT.format(K=10)
+
+rule compare_signatures:
+    input:
+        STM_SIGNATURES_FILE.format(covariates=cancer_type_covariates, K="{K}", project="TCGAPanCan"),
+        STM_SIGNATURES_FILE.format(covariates="NULL", K="{K}", project="TCGAPanCan")
+    output:
+        COS_SIM_CANCER_TYPE_NULL_COV_PLOT,
+        COS_SIM_CANCER_TYPE_NULL_COV_VALS,
+    script:
+        "../signature-visualization/src/plot_cosine_similarity.py"
 
 
 rule combine_stm_heldout_likelihood_files:
