@@ -1,78 +1,103 @@
 LAML:
   - HELY
   - LAML
+  - Myeloid
 DLBC:
   - HELY
   - DLBC
+  - Lymphoid
 THYM:
   - HELY
   - THYM
+  - Thymus
 OV:
   - GYN
   - OV
+  - Ovary
 UCEC:
   - GYN
   - UCEC
+  - Uterus
 CESC:
   - GYN
   - CESC
+  - Cervix
 BRCA:
   - GYN
   - BRCA
+  - Breast
 BLCA:
   - UR
   - BLCA
+  - Bladder
 PRAD:
   - UR
   - PRAD
+  - Prostate
 TGCT:
   - UR
   - TGCT
+  - SoftTissue
 KIRC:
   - UR
   - KIRC
+  - Kidney
 KICH:
   - UR
   - KICH
+  - Kidney
 KIRP:
   - UR
   - KIRP
+  - Kidney
 THCA:
   - END
   - THCA
+  - Thyroid
 ACC:
   - END
   - ACC
+  - AdrenalGland
 ESCA:
   - CG
   - ESCA
+  - Stomach
 STAD:
   - CG
   - STAD
+  - Stomach
 COAD:
   - CG
   - COAD
+  - Bowel
 READ:
   - CG
   - READ
+  - Bowel
 LIHC:
   - DG
   - LIHC
+  - Liver
 PAAD:
   - DG
   - PAAD
+  - Pancreas
 CHOL:
   - DG
   - CHOL
+  - Biliary
 LUAD:
   - THOR
   - LUAD
+  - Lung
 LUSC:
   - THOR
   - LUSC
+  - Lung
 MESO:
   - THOR
   - MESO
+  - Pleura
 GBM:
   - CNS
   - GBM
@@ -85,13 +110,19 @@ SARC:
 UCS:
   - ST
   - UCS
+  - Uterus
 SKCM:
   - MEL
   - SKCM
+  - Skin
 UVM:
   - MEL
   - UVM
+  - Eye
 HNSC:
   - HNSC
+  - HeadNeck
 PCPG:
   - PCPG
+  - AdrenalGland
+  - SoftTissue

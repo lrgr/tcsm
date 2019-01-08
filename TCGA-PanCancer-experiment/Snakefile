@@ -50,6 +50,7 @@ STM_SIGNATURES_FILE=join(OUTPUT_DIR, 'stm-exome-signatures_{covariates}_{K}_{pro
 CANCER_HIERARCHY_FILE=join("data", "cancer_type_hierarchy.yml")
 COS_SIM_CANCER_TYPE_NULL_COV_PLOT=join(OUTPUT_DIR, "stm-cancer-type-null-covariate_{K}.pdf")
 COS_SIM_CANCER_TYPE_NULL_COV_VALS=join(OUTPUT_DIR, "stm-cancer-type-null-covariate_{K}.tsv")
+SIG_COSINE_PLOT=join(OUTPUT_DIR, "{method}-cosine-similarity_{covariates}_{K}_{project}.pdf")
 # PARAMETERS
 seed="123456"
 N_FOLDS=5
@@ -74,6 +75,12 @@ ddr_covariates = ['ddASCC3',
 cancer_hierarchy_covariates = "+".join(["HELY", "GYN", "UR", "END", "CG", "DG", "THOR", "CNS", "ST", "MEL"])
 cancer_type_covariates = "+".join(CANCER_TYPES)
 
+oncotree_tissues = ["Myeloid", "Lymphoid", "Thymus", "Ovary", "Uterus", "Cervix",
+                    "Breast", "Bladder", "Prostate", "SoftTissue", "Kidney",
+                    "Thyroid", "Stomach", "AdrenalGland", "Bowel", "Liver",
+                    "Pancreas", "Biliary", "Lung", "Pleura", "CNS", "Skin", "Eye",
+                    "HeadNeck"]
+oncotree_tissue_covariates = "+".join(oncotree_tissues)
 # ddr_covariates = [cancer_type_covariates + "+" + ddr for ddr in ddr_covariates]
 
 # cancer_types + ddr + ddr*cancer_type
@@ -89,12 +96,20 @@ def get_ddr_interaction_covariates(cancer_types, ddr_covariates):
 
 ddr_interaction_covariates = get_ddr_interaction_covariates(CANCER_TYPES, ddr_covariates)
 MIN_K=5
-MAX_K=40
+MAX_K=30
 K_RANGE=range(MIN_K, MAX_K+1, 1)
 
 rule all:
     input:
-        expand(LIKELIHOOD_PLOT, covariates1=cancer_type_covariates, covariates2="+".join([cancer_type_covariates, cancer_hierarchy_covariates])),
+        expand(STM_COMBINED_HELDOUT_LIKELIHOOD_FILE, covariates=oncotree_tissue_covariates),
+
+rule model_selection:
+    input:
+        expand(LIKELIHOOD_PLOT, covariates1="NULL", covariates2=oncotree_tissue_covariates),
+
+rule compare_to_cosmic:
+    input:
+        expand(SIG_COSINE_PLOT, method="stm", covariates=cancer_type_covariates+"+POLEexo", K=10, project="TCGAPanCan")
 
 rule compare_signatures_10:
     input:
