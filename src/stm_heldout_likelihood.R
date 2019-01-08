@@ -22,7 +22,11 @@ test.mutation.count.file <- snakemake@input[[2]]
 train.feature.file <- snakemake@input[[3]]
 test.feature.file <- snakemake@input[[4]]
 seed <- strtoi(snakemake@params[[1]])
-covariate.formula <- as.formula(paste0("~", snakemake@wildcards[["covariates"]]))
+covariates <- snakemake@wildcards[["covariates"]]
+covariates <- gsub("CANCERTYPE", "LAML+ACC+BLCA+LGG+BRCA+CESC+CHOL+COAD+ESCA+GBM+HNSC+KICH+KIRC+KIRP+LIHC+LUAD+LUSC+DLBC+MESO+OV+PAAD+PCPG+PRAD+READ+SARC+SKCM+STAD+TGCT+THYM+THCA+UCS+UCEC+UVM", covariates)
+covariates <- gsub("ONCOTISSUE", "Myeloid+Lymphoid+Thymus+Ovary+Uterus+Cervix+Breast+Bladder+Prostate+SoftTissue+Kidney+Thyroid+Stomach+AdrenalGland+Bowel+Liver+Pancreas+Biliary+Lung+Pleura+CNS+Skin+Eye+HeadNeck", covariates)
+
+covariate.formula <- as.formula(paste0("~", covariates))
 print(covariate.formula)
 K <- strtoi(snakemake@wildcards[["K"]])
 heldout.performance.file <- snakemake@output[[1]]

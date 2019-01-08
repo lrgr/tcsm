@@ -51,6 +51,7 @@ CANCER_HIERARCHY_FILE=join("data", "cancer_type_hierarchy.yml")
 COS_SIM_CANCER_TYPE_NULL_COV_PLOT=join(OUTPUT_DIR, "stm-cancer-type-null-covariate_{K}.pdf")
 COS_SIM_CANCER_TYPE_NULL_COV_VALS=join(OUTPUT_DIR, "stm-cancer-type-null-covariate_{K}.tsv")
 SIG_COSINE_PLOT=join(OUTPUT_DIR, "{method}-cosine-similarity_{covariates}_{K}_{project}.pdf")
+
 # PARAMETERS
 seed="123456"
 N_FOLDS=5
@@ -105,7 +106,7 @@ rule all:
 
 rule model_selection:
     input:
-        expand(LIKELIHOOD_PLOT, covariates1="NULL", covariates2=oncotree_tissue_covariates),
+        expand(LIKELIHOOD_PLOT, covariates1="CANCERTYPE", covariates2="ONCOTISSUE"),
 
 rule compare_to_cosmic:
     input:

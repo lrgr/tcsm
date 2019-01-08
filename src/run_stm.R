@@ -7,6 +7,8 @@ run.stm <- function(mutation.count.file, feature.file, covariates, K, seed, expo
   corpus <- readCorpus(mat, type="dtm")
   prep <- prepDocuments(corpus$documents, corpus$vocab)
   feature.data <- read.delim(feature.file, sep = '\t', header = TRUE, row.names=1)
+  covariates <- gsub("CANCERTYPE", "LAML+ACC+BLCA+LGG+BRCA+CESC+CHOL+COAD+ESCA+GBM+HNSC+KICH+KIRC+KIRP+LIHC+LUAD+LUSC+DLBC+MESO+OV+PAAD+PCPG+PRAD+READ+SARC+SKCM+STAD+TGCT+THYM+THCA+UCS+UCEC+UVM", covariates)
+  covariates <- gsub("ONCOTISSUE", "Myeloid+Lymphoid+Thymus+Ovary+Uterus+Cervix+Breast+Bladder+Prostate+SoftTissue+Kidney+Thyroid+Stomach+AdrenalGland+Bowel+Liver+Pancreas+Biliary+Lung+Pleura+CNS+Skin+Eye+HeadNeck", covariates)
   covariate.formula <- as.formula(paste0("~", covariates))
   stm1 <- stm(documents=prep$documents, vocab=prep$vocab, K=K, seed=seed, prevalence = covariate.formula, max.em.its = 500, data=feature.data, init.type = "Spectral")
   effect <- estimateEffect(covariate.formula, stm1, metadata=feature.data)
