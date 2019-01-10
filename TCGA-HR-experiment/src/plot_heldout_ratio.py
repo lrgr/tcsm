@@ -10,22 +10,20 @@ from textwrap import fill
 from scipy.stats import ranksums
 
 def get_hr_status(row):
-    if row["biBRCA1"] == 1:
-        return "biBRCA1"
-    if row["biBRCA2"] == 1:
-        return "biBRCA2"
-    if row["esBRCA1"] == 1:
-        return "esBRCA1"
-    if row["esRAD51C"] == 1:
-        return "esRAD51C"
-    if row["esFANCF"] == 1:
-        return "esFANCF"
-    if row["biFANCM"] == 1:
-        return "biFANCM"
-    if row["biATM"] == 1:
-        return "biATM"
-    if row["biCHEK2"] == 1:
-        return "biCHEK2"
+    if row["BRCA1"] == 1:
+        return "BRCA1"
+    if row["BRCA2"] == 1:
+        return "BRCA2"
+    if row["RAD51C"] == 1:
+        return "RAD51C"
+    if row["FANCF"] == 1:
+        return "FANCF"
+    if row["FANCM"] == 1:
+        return "FANCM"
+    if row["ATM"] == 1:
+        return "ATM"
+    if row["CHEK2"] == 1:
+        return "CHEK2"
     return "wildtype"
 
 
@@ -34,16 +32,15 @@ if __name__ == '__main__':
     for f in snakemake.input:
         output.append(pd.read_csv(f, sep="\t", index_col=0))
     df = pd.concat(output)
-    genes = list(df.columns)
-    gene = "BRCA12"
+    gene = "BRCA1BRCA2RAD51C"
     heldout = "heldout.ratio"
-    df[gene] = df[gene].map({1: "Biallelic Inactivation", 0: "Wildtype"})
-    hr_genes = ["biBRCA1", "biBRCA2", "biATM", "biCHEK2", "biFANCM", "esBRCA1", "esRAD51C", "esFANCF"]
+    df[gene] = df[gene].map({1: "Biallelic HR Covariate Inactivation", 0: "Wildtype"})
     df["HR Status"] = df.apply(get_hr_status, axis=1)
+    print(ranksums(df.loc[df[gene] == "Biallelic HR Covariate Inactivation"][heldout], df.loc[df[gene] == "Wildtype"][heldout]))
     ax = sns.swarmplot(x=gene, y=heldout, hue="HR Status", data=df)
     # plt.legend(loc='lower center')
     plt.legend(ncol=2)
     ax = sns.boxplot(x=gene, y=heldout, data=df, showcaps=False, boxprops={'facecolor':'None'}, showfliers=False, whiskerprops={'linewidth':0})
-    ax.set_xlabel('Held-out Samples')
+    ax.set(xlabel="", ylabel="Held-out log likelihood ratio")
 
     plt.savefig(snakemake.output[0])

@@ -10,7 +10,9 @@ run.stm <- function(mutation.count.file, feature.file, covariates, K, seed, expo
   covariates <- gsub("CANCERTYPE", "LAML+ACC+BLCA+LGG+BRCA+CESC+CHOL+COAD+ESCA+GBM+HNSC+KICH+KIRC+KIRP+LIHC+LUAD+LUSC+DLBC+MESO+OV+PAAD+PCPG+PRAD+READ+SARC+SKCM+STAD+TGCT+THYM+THCA+UCS+UCEC+UVM", covariates)
   covariates <- gsub("ONCOTISSUE", "Myeloid+Lymphoid+Thymus+Ovary+Uterus+Cervix+Breast+Bladder+Prostate+SoftTissue+Kidney+Thyroid+Stomach+AdrenalGland+Bowel+Liver+Pancreas+Biliary+Lung+Pleura+CNS+Skin+Eye+HeadNeck", covariates)
   covariate.formula <- as.formula(paste0("~", covariates))
-  stm1 <- stm(documents=prep$documents, vocab=prep$vocab, K=K, seed=seed, prevalence = covariate.formula, max.em.its = 500, data=feature.data, init.type = "Spectral")
+  stm1 <- stm(documents=prep$documents, vocab=prep$vocab, K=K, seed=seed,
+              prevalence = covariate.formula, max.em.its = 500, data=feature.data,
+              init.type = "Spectral")
   effect <- estimateEffect(covariate.formula, stm1, metadata=feature.data)
   effect.summary <- summary(effect)
   print(effect.summary)
@@ -18,8 +20,8 @@ run.stm <- function(mutation.count.file, feature.file, covariates, K, seed, expo
   results <- lapply(effect.summary$tables, function(x) x[, "Estimate"])
   effect.frame <- as.data.frame(do.call(rbind, results))
   write.table(effect.frame, file=snakemake@output[[3]], sep="\t")
-  # print(stm1$mu)
-  # print(stm1$sigma)
+  print(stm1$mu$gamma)
+  print(stm1$sigma)
   # plot.estimateEffect(prep)
   # searchK(documents = train.out$documents, vocab = train.out$vocab, K=seq(3, 10))
   # process the signatures and save them

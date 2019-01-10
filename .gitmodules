@@ -1,3 +1,6 @@
 [submodule "mutation-signatures-viz"]
 	path = mutation-signatures-viz
 	url = git@github.com:lrgr/mutation-signatures-viz.git
+[submodule "signature-estimation-py"]
+	path = signature-estimation-py
+	url = git@github.com:lrgr/signature-estimation-py.git

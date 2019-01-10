@@ -10,9 +10,9 @@ STM_ALL_COUNT_EXPOSURES_FILE=join(OUTPUT_DIR, 'stm-all-count-exposures_{covariat
 STM_TEST_COUNT_EXPOSURES_FILE=join(OUTPUT_DIR, 'stm-test-count-exposures_{covariates}_{K}_TCGA-BRCA_{fold}.tsv')
 STM_TRAIN_COUNT_EXPOSURES_FILE=join(OUTPUT_DIR, 'stm-train-count-exposures_{covariates}_{K}_TCGA-BRCA_{fold}.tsv')
 
-STM_ALL_EXPOSURES_FILE=join(OUTPUT_DIR, 'stm-all-{norm}-exposures_{covariates}_{K}_TCGA-BRCA.tsv')
-STM_TEST_EXPOSURES_FILE=join(OUTPUT_DIR, 'stm-test-{norm}-exposures_{covariates}_{K}_TCGA-BRCA_{fold}.tsv')
-STM_TRAIN_EXPOSURES_FILE=join(OUTPUT_DIR, 'stm-train-{norm}-exposures_{covariates}_{K}_TCGA-BRCA_{fold}.tsv')
+STM_ALL_EXPOSURES_FILE=join(OUTPUT_DIR, '{model}-all-{norm}-exposures_{covariates}_{K}_TCGA-BRCA.tsv')
+STM_TEST_EXPOSURES_FILE=join(OUTPUT_DIR, '{model}-test-{norm}-exposures_{covariates}_{K}_TCGA-BRCA_{fold}.tsv')
+STM_TRAIN_EXPOSURES_FILE=join(OUTPUT_DIR, '{model}-train-{norm}-exposures_{covariates}_{K}_TCGA-BRCA_{fold}.tsv')
 STM_TRAIN_SIGNATURES_FILE=join(OUTPUT_DIR, 'stm-train-signatures_{covariates}_{K}_TCGA-BRCA_{fold}.tsv')
 
 TEST_FEATURE_FILE=join(OUTPUT_DIR, "features-test_TCGA-BRCA_{fold}.tsv")
@@ -22,10 +22,11 @@ MC_FILE=join(OUTPUT_DIR, "mutation-count-all_TCGA-BRCA.tsv")
 
 # HELDOUT_AUC_FILE=join(OUTPUT_DIR, 'linear-svm-heldout-auc_{covariates}_{K}.pdf')
 # IN_SAMPLE_AUC_FILE=join(OUTPUT_DIR, 'linear-svm-auc_{covariates}_{K}.pdf')
-IN_SAMPLE_PR_FILE=join(OUTPUT_DIR, 'linear-svm-in-sample-pr_{norm}_{covariates}_{K}.tsv')
+IN_SAMPLE_PR_FILE=join(OUTPUT_DIR, 'linear-svm-in-sample-pr_{norm}_{model}_{covariates}_{K}.tsv')
 IN_SAMPLE_PR_FILE_MC=join(OUTPUT_DIR, 'linear-svm-pr_mutation_counts.tsv')
 IN_SAMPLE_PR_LST_FILE=join(OUTPUT_DIR, 'linear-svm-pr_lst.tsv')
-HELDOUT_PR_FILE=join(OUTPUT_DIR, 'linear-svm-heldout-pr_{norm}_{covariates}_{K}.tsv')
+HELDOUT_PR_FILE=join(OUTPUT_DIR, 'linear-svm-heldout-pr_{norm}_{model}_{covariates}_{K}.tsv')
+CORRELATION_FILE=join(OUTPUT_DIR, 'correlation_{topic}_{norm}_{model}_{covariates}_{K}.tsv')
 
 # S1 = STM_TRAIN_SIGNATURES_FILE.format(covariates="NULL", K=6, fold=0)
 # S2 = STM_TRAIN_SIGNATURES_FILE.format(covariates="NULL", K=6, fold=3)
@@ -38,16 +39,16 @@ combined_covariates = "+".join(predictive_covariates)
 N_FOLDS=5
 FOLDS=range(0, N_FOLDS)
 
-K=[7]
+K=[5]
 rule predict_all:
     input:
-        # expand(STM_ALL_EXPOSURES_FILE, covariates=["LST", "BRCA12", "NULL"], K=K, norm=['count', 'normalized']),
-        # expand(STM_TRAIN_EXPOSURES_FILE, covariates=["BRCA12", "NULL"], K=K, norm=['count', 'normalized'], fold=FOLDS),
-        # expand(STM_TEST_EXPOSURES_FILE, covariates=["BRCA12", "NULL"], K=K, norm=['count', 'normalized'], fold=FOLDS),
-        expand(IN_SAMPLE_PR_FILE, covariates=["LST", "NULL", "BRCA12", combined_covariates], K=K, norm=['count', 'normalized']),
+        #expand(IN_SAMPLE_PR_FILE, model="stm", covariates=["LST", "NULL", "BRCA1BRCA2RAD51C"], K=K, norm=['normalized']),
+        # expand(CORRELATION_FILE, model="stm", covariates=["NULL", "BRCA1BRCA2RAD51C"], K=K, norm=['normalized'], topic="Topic2"),
+        # expand(CORRELATION_FILE, model="SS", covariates="NULL", K=K, norm=['normalized'], topic="S5"),
+        #expand(IN_SAMPLE_PR_FILE, model="SS", covariates=["NULL"], K=K, norm=['normalized']),
         # IN_SAMPLE_PR_FILE_MC,
         # IN_SAMPLE_PR_LST_FILE,
-        # expand(HELDOUT_PR_FILE, covariates=["NULL", "BRCA12"], K=K, norm=['count', 'normalized']),
+        expand(HELDOUT_PR_FILE, covariates=["NULL"], K=K, norm=['normalized'], model="SS"),
         #STM_TEST_COUNT_EXPOSURES_FILE,
         #STM_TRAIN_COUNT_EXPOSURES_FILE
         # OVERALL_HELDOUT_PREDICTION_ACCURACY_FILE,
@@ -65,6 +66,15 @@ rule predict_all:
 #     script:
 #         "../signature-visualization/src/plot_cosine_similarity.py"
 
+
+rule in_sample_correlation:
+    input:
+        TCGAHR(STM_ALL_EXPOSURES_FILE),
+        TCGAHR(FEATURE_FILE)
+    output:
+        CORRELATION_FILE
+    script:
+        "src/calculate_topic_LST_correlation.py"
 
 
 rule in_sample_PR_LST:
@@ -93,16 +103,16 @@ rule in_sample_PR:
     script:
         "src/run_LinearSVC_CV_PR.py"
 
-# rule heldout_PR:
-#     input:
-#         expand(STM_TRAIN_EXPOSURES_FILE, norm="{norm}", covariates="{covariates}", K="{K}", fold=FOLDS),
-#         expand(STM_TEST_EXPOSURES_FILE, norm="{norm}", covariates="{covariates}", K="{K}", fold=FOLDS),
-#         expand(TRAIN_FEATURE_FILE, covariates="{covariates}", K="{K}", fold=FOLDS),
-#         expand(TEST_FEATURE_FILE, covariates="{covariates}", K="{K}", fold=FOLDS)
-#     output:
-#         HELDOUT_PR_FILE
-#     script:
-#         "src/run_LinearSVC_PR.py"
+rule heldout_PR:
+    input:
+        TCGAHR(expand(STM_TRAIN_EXPOSURES_FILE, model="{model}", norm="{norm}", covariates="{covariates}", K="{K}", fold=FOLDS)),
+        TCGAHR(expand(STM_TEST_EXPOSURES_FILE, model="{model}", norm="{norm}", covariates="{covariates}", K="{K}", fold=FOLDS)),
+        TCGAHR(expand(TRAIN_FEATURE_FILE, covariates="{covariates}", K="{K}", fold=FOLDS)),
+        TCGAHR(expand(TEST_FEATURE_FILE, covariates="{covariates}", K="{K}", fold=FOLDS))
+    output:
+        HELDOUT_PR_FILE
+    script:
+        "src/run_LinearSVC_PR.py"
 
 
 # rule in_sample_AUC:

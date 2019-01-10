@@ -48,9 +48,10 @@ STM_ALL_NORMALIZED_EXPOSURES_FILE=join(OUTPUT_DIR, 'stm-all-normalized-exposures
 LIKELIHOOD_PLOT=join(OUTPUT_DIR,'likelihood-plot_{covariates1}_{covariates2}_TCGA-{cancer_type}.pdf')
 STM_HELDOUT_LIKELIHOOD_RATIO_FILE=join(OUTPUT_DIR, 'stm-heldout-ratio_{covariates}_{K}_TCGA-{cancer_type}_{fold}.tsv')
 LST_PLOT=join(OUTPUT_DIR, "lst-scatterplot_{covariates}_{K}_TCGA-{cancer_type}.pdf")
-STM_BOXPLOT=join(OUTPUT_DIR, "stm-boxplot_{covariates}_{K}_TCGA-{cancer_type}.png")
+STM_BOXPLOT=join(OUTPUT_DIR, "stm-boxplot_{covariates}_{K}_TCGA-{cancer_type}.pdf")
 TOPIC_EXPOSURE_PLOT=join(OUTPUT_DIR, "stm-exposure-plot_{covariates}_{K}_TCGA-{cancer_type}_{topic}.png")
-
+SS_NORMALIZED_EXPOSURES_FILE=join(OUTPUT_DIR, 'SS-{partition}-normalized-exposures_NULL_{K}_TCGA-{cancertype}_{fold}.tsv')
+STM_EXOME_SIGNATURES_FILE=join(OUTPUT_DIR, 'stm-exome-signatures_{covariates}_{K}_TCGA-{cancertype}.tsv')
 
 seed="123456"
 
@@ -60,7 +61,7 @@ FOLDS=range(0, N_FOLDS)
 MIN_K=2
 MAX_K=20
 K_RANGE=range(MIN_K, MAX_K+1)
-K=[8]
+K=[5]
 # these are all the covariates that are inactivated in at least 3 patients
 biallelic_inactivation_covariates = ["biBRCA1", "biBRCA2", "biATM", "biCHEK2", "biFANCM",  "POLEexo"]
 epigenetic_silencing_covariates = ["esBRCA1", "esRAD51C", "esALKBH3", "esFANCF", "esMLH3", "esMLH1"]
@@ -71,15 +72,21 @@ combined_covariates = "+".join(predictive_covariates)
 
 rule all:
     input:
+        expand(STM_EXOME_SIGNATURES_FILE, covariates="BRCA1BRCA2RAD51C", K=K, cancertype="BRCA")
+        # expand(SS_NORMALIZED_EXPOSURES_FILE, partition="test", cancertype=["BRCA"], fold=FOLDS, K=5)
+        # expand(SS_NORMALIZED_EXPOSURES_FILE, K=K, project="TCGA-BRCA"),
+        # expand(SIG_COSINE_PLOT, covariates=["BRCA1BRCA2RAD51C", "LST", "NULL"], method="stm", K=K, project="TCGA-BRCA"),
+        # expand(SIG_COSINE_PLOT, covariates="BRCA1BRCA2RAD51C", method="stm", K=K, project="TCGA-BRCA"),
         # expand(TOPIC_EXPOSURE_PLOT, covariates=["LST"], K=K, cancer_type="BRCA", topic="Topic8"),
-        #expand(LST_PLOT, covariates=["BRCA12"], cancer_type="BRCA", K=K),
-        #expand(STM_BOXPLOT, covariates=["BRCA12"], cancer_type="BRCA", K=K),
+        # expand(LST_PLOT, covariates=["BRCA1BRCA2RAD51C"], cancer_type="BRCA", K=K),
+        # expand(STM_BOXPLOT, covariates=["BRCA1BRCA2RAD51C"], cancer_type="BRCA", K=K),
         #expand(ALL_FEATURE_FILE, cancer_type="BRCA"),
         # expand(SIG_PLOT, covariates=["LST"], project="TCGA-BRCA", K=K),
-        #expand(STM_EFFECT_PLOT, covariates=combined_covariates, project="TCGA-LUAD", K=K),
-        # expand(SIG_COSINE_PLOT, covariates=["LST"], K=K, project="TCGA-BRCA"),
-        # expand(STM_BOXPLOT, K=K, covariates="BRCA12", cancer_type="BRCA"),
-        expand(SS_NUM_SIG_FILE, project=["TCGA-BRCA"]),
+        # expand(LST_PLOT, covariates="BRCA1BRCA2RAD51C", K=K, cancer_type="BRCA"),
+        # expand(STM_EFFECT_PLOT, covariates=["BRCA1BRCA2RAD51C", "BRCA1+BRCA2+RAD51C"], project="TCGA-BRCA", K=K),
+        # expand(SIG_COSINE_PLOT, covariates=["BRCA1BRCA2RAD51C", "LST"], K=K, project="TCGA-BRCA"),
+        # expand(STM_BOXPLOT, K=K, covariates="BRCA1BRCA2RAD51C", cancer_type="BRCA"),
+        # expand(SS_NUM_SIG_FILE, project=["TCGA-BRCA"]),
 
 rule model_selection:
     input:
