@@ -7,9 +7,11 @@ if __name__ == '__main__':
     feature_dfs = []
     for i in range(1, len(snakemake.input)):
         feature_dfs.append(pd.read_csv(snakemake.input[i], sep="\t", index_col=0))
+    # add cancer type as a covariate
     feature_dfs.append(pd.DataFrame(data=1, index=mc_df.index, columns=[snakemake.wildcards["cancer_type"]]))
+    # add number of mutations as a covariate
+    feature_dfs.append(mc_df.sum(axis=1).to_frame(name="nMuts"))
     feature_df = pd.concat(feature_dfs, axis=1, join="inner")
-    print(feature_df)
     samples = list(set(mc_df.index).intersection(feature_df.index))
     mc_df = mc_df.loc[samples]
     mc_df = mc_df.sort_index()

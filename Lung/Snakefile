@@ -1,0 +1,165 @@
+from os.path import join
+
+subworkflow dataworkflow:
+    workdir:
+        "../TCGA-data"
+
+include: "../Snakefile"
+include: '../signature-visualization/Snakefile'
+
+OUTPUT_DIR = 'processed'
+RAW_DIR = 'raw'
+
+# Files from TCGA-data subworkflow
+CLINICAL_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_clinical.tsv")
+LST_FEATURE_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_LST_feature.tsv")
+MSI_CLASSIFICATION_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_msi-classification_Hause2016.tsv")
+RAW_MUTATION_COUNT_MATRIX_FILE=join(RAW_DIR, "TCGA-{cancer_type}_mutation_count.tsv")
+
+# Processed Files
+# these include the test, train and validation samples
+ALL_MUTATION_COUNT_MATRIX_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_all_mutation_count.tsv")
+ALL_FEATURE_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_all_features.tsv")
+# these just include the test and train samples
+MC_FILE=join(OUTPUT_DIR, "mutation-count-all_TCGA-{cancer_type}.tsv")
+FEATURE_FILE=join(OUTPUT_DIR, "features-all_TCGA-{cancer_type}.tsv")
+
+VALIDATE_FEATURE_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_mutation_count_validate.tsv")
+VALIDATE_MC_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_clinical_features_validate.tsv")
+
+TEST_FEATURE_FILE=join(OUTPUT_DIR, "features-test_TCGA-{cancer_type}_{fold}.tsv")
+TEST_MC_FILE=join(OUTPUT_DIR, "mutation-count-test_TCGA-{cancer_type}_{fold}.tsv")
+TRAIN_FEATURE_FILE=join(OUTPUT_DIR, "features-train_TCGA-{cancer_type}_{fold}.tsv")
+TRAIN_MC_FILE=join(OUTPUT_DIR, "mutation-count-train_TCGA-{cancer_type}_{fold}.tsv")
+
+# Files from STM
+STM_SIGNATURES_FILE=join(OUTPUT_DIR, 'stm-exome-signatures_{covariates}_{K}_{project}.tsv')
+SIG_COSINE_PLOT=join(OUTPUT_DIR, "{method}-cosine-similarity_{covariates}_{K}_{project}.pdf")
+STM_HELDOUT_LIKELIHOOD_FILE=join(OUTPUT_DIR, 'stm-heldout-likelihood_{covariates}_{K}_TCGA-LUNG_{fold}.tsv')
+STM_COMBINED_HELDOUT_LIKELIHOOD_FILE=join(OUTPUT_DIR, 'stm-combined-heldout_{covariates}_{project}.tsv')
+LIKELIHOOD_PLOT=join(OUTPUT_DIR,'likelihood-plot_{covariates1}_{covariates2}_TCGA-LUNG.pdf')
+# Parameters
+seed="123456"
+N_FOLDS=5
+FOLDS=range(0, N_FOLDS)
+LUNG_CANCERS=["LUAD", "LUSC"]
+
+covariates="Smoker+LUAD+LUSC+nMuts+Age+LST+MSI"
+
+MIN_K=2
+MAX_K=10
+K_RANGE=range(MIN_K, MAX_K+1, 1)
+
+rule all:
+    input:
+        expand(STM_COMBINED_HELDOUT_LIKELIHOOD_FILE, covariates=covariates, project="TCGA-LUNG"),
+
+rule model_selection:
+    input:
+        expand(LIKELIHOOD_PLOT, covariates1="NULL", covariates2=covariates, project="TCGA-LUNG"),
+
+rule combine_stm_heldout_likelihood_files:
+    input:
+        expand(STM_HELDOUT_LIKELIHOOD_FILE, K = K_RANGE, fold=FOLDS, covariates="{covariates}")
+    output:
+        STM_COMBINED_HELDOUT_LIKELIHOOD_FILE
+    script:
+        "../src/combine_heldout_likelihood_files.py"
+
+
+rule combine_train_mc_file:
+    input:
+        expand(TRAIN_MC_FILE, cancer_type=LUNG_CANCERS, fold="{fold}")
+    output:
+        TRAIN_MC_FILE.format(cancer_type="LUNG", fold="{fold}")
+    script:
+        "../src/combine_cancer_specific_files.py"
+
+rule combine_test_mc_file:
+    input:
+        expand(TEST_MC_FILE, cancer_type=LUNG_CANCERS, fold="{fold}")
+    output:
+        TEST_MC_FILE.format(cancer_type="LUNG", fold="{fold}")
+    script:
+        "../src/combine_cancer_specific_files.py"
+
+rule combine_train_feature_file:
+    input:
+        expand(TRAIN_FEATURE_FILE, cancer_type=LUNG_CANCERS, fold="{fold}")
+    output:
+        TRAIN_FEATURE_FILE.format(cancer_type="LUNG", fold="{fold}")
+    script:
+        "../src/combine_cancer_specific_files.py"
+
+rule combine_test_feature_file:
+    input:
+        expand(TEST_FEATURE_FILE, cancer_type=LUNG_CANCERS, fold="{fold}")
+    output:
+        TEST_FEATURE_FILE.format(cancer_type="LUNG", fold="{fold}")
+    script:
+        "../src/combine_cancer_specific_files.py"
+
+rule combine_feature_files:
+    input:
+        expand(FEATURE_FILE, cancer_type=LUNG_CANCERS)
+    output:
+        FEATURE_FILE.format(cancer_type="LUNG")
+    script:
+        "../src/combine_cancer_specific_files.py"
+
+rule combine_mutation_count_files:
+    input:
+        expand(MC_FILE, cancer_type=LUNG_CANCERS)
+    output:
+        MC_FILE.format(cancer_type="LUNG")
+    script:
+        "../src/combine_cancer_specific_files.py"
+
+rule split_test_training_data:
+    wildcard_constraints:
+        cancer_type="LUAD|LUSC"
+    input:
+        MC_FILE,
+        FEATURE_FILE
+    params:
+        seed=seed,
+        n_folds=N_FOLDS
+    output:
+        TEST_MC_FILE,
+        TRAIN_MC_FILE,
+        TEST_FEATURE_FILE,
+        TRAIN_FEATURE_FILE
+    script:
+        "../src/split_test_training_data.py"
+
+rule split_validate_training:
+    wildcard_constraints:
+        cancer_type="LUAD|LUSC"
+    input:
+        ALL_MUTATION_COUNT_MATRIX_FILE,
+        ALL_FEATURE_FILE
+    params:
+        seed=seed
+    output:
+        VALIDATE_MC_FILE,
+        MC_FILE,
+        VALIDATE_FEATURE_FILE,
+        FEATURE_FILE
+    script:
+        "../src/split_training_validate_data.py"
+
+rule clean_feature_mutation_count:
+    wildcard_constraints:
+        cancer_type="LUAD|LUSC"
+    params:
+        seed=seed
+    input:
+        dataworkflow(RAW_MUTATION_COUNT_MATRIX_FILE),
+        dataworkflow(CLINICAL_FILE),
+        dataworkflow(MSI_CLASSIFICATION_FILE),
+        dataworkflow(LST_FEATURE_FILE),
+    output:
+        ALL_MUTATION_COUNT_MATRIX_FILE,
+        ALL_FEATURE_FILE
+    script:
+        "../src/create_feature_file.py"
