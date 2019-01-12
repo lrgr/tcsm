@@ -49,7 +49,7 @@ N_FOLDS=5
 FOLDS=range(0, N_FOLDS)
 LUNG_CANCERS=["LUAD", "LUSC"]
 
-covariates="Smoker+LUAD+LUSC+Age+LST+MSI"
+covariates="Smoker+LUAD+LUSC+LST+MSI"
 
 MIN_K=2
 MAX_K=10
@@ -72,7 +72,7 @@ rule plot_topic_exposures:
 
 rule compare_to_cosmic:
     input:
-        expand(SIG_COSINE_PLOT, method="stm", covariates="nMuts+LST+MSI", K=6, cancer_type="LUSC")
+        expand(SIG_COSINE_PLOT, method="stm", covariates="LUSC+LUAD+LST+MSI+Smoker", K=6, cancer_type="LUNG")
 
 rule model_selection:
     input:
