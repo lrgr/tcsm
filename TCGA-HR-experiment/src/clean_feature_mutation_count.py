@@ -7,6 +7,7 @@ if __name__ == '__main__':
     feature_dfs = []
     for i in range(1, len(snakemake.input)):
         feature_dfs.append(pd.read_csv(snakemake.input[i], sep="\t", index_col=0))
+    feature_dfs.append(mc_df.sum(axis=1).to_frame(name="nMuts"))
     feature_df = pd.concat(feature_dfs, axis=1, join="inner")
     samples = list(set(mc_df.index).intersection(feature_df.index))
     mc_df = mc_df.loc[samples]

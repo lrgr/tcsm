@@ -12,7 +12,7 @@ run.stm <- function(mutation.count.file, feature.file, covariates, K, seed, expo
   covariate.formula <- as.formula(paste0("~", covariates))
   stm1 <- stm(documents=prep$documents, vocab=prep$vocab, K=K, seed=seed,
               prevalence = covariate.formula, max.em.its = 500, data=feature.data,
-              init.type = "Spectral")
+              init.type = "Spectral", sigma=0)
   effect <- estimateEffect(covariate.formula, stm1, metadata=feature.data)
   effect.summary <- summary(effect)
   print(effect.summary)

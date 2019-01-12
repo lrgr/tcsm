@@ -23,6 +23,7 @@ HR_BIALLELIC_INACTIVATION_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_HR-biallelic
 DDR_SILENCING_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_Silencing_Knijnenburg2018.tsv")
 DDR_MUTATED_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_Mutated_Knijnenburg2018.tsv")
 DDR_DELETED_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_Deleted_Knijnenburg2018.tsv")
+CLINICAL_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_clinical.tsv")
 
 # Input files
 ALL_MUTATION_COUNT_MATRIX_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_all_mutation_count.tsv")
@@ -72,7 +73,7 @@ combined_covariates = "+".join(predictive_covariates)
 
 rule all:
     input:
-        expand(STM_EXOME_SIGNATURES_FILE, covariates="BRCA1BRCA2RAD51C", K=K, cancertype="BRCA")
+        expand(STM_EXOME_SIGNATURES_FILE, covariates="BRCA1BRCA2RAD51C+Age+nMuts", K=K, cancertype="BRCA")
         # expand(SS_NORMALIZED_EXPOSURES_FILE, partition="test", cancertype=["BRCA"], fold=FOLDS, K=5)
         # expand(SS_NORMALIZED_EXPOSURES_FILE, K=K, project="TCGA-BRCA"),
         # expand(SIG_COSINE_PLOT, covariates=["BRCA1BRCA2RAD51C", "LST", "NULL"], method="stm", K=K, project="TCGA-BRCA"),
@@ -169,6 +170,7 @@ rule clean_feature_mutation_count:
         dataworkflow(DDR_SILENCING_FILE),
         dataworkflow(LST_FEATURE_FILE),
         dataworkflow(HR_FEATURE_FILE),
+        dataworkflow(CLINICAL_FILE),
     output:
         ALL_MUTATION_COUNT_MATRIX_FILE,
         ALL_FEATURE_FILE

@@ -33,18 +33,23 @@ TRAIN_FEATURE_FILE=join(OUTPUT_DIR, "features-train_TCGA-{cancer_type}_{fold}.ts
 TRAIN_MC_FILE=join(OUTPUT_DIR, "mutation-count-train_TCGA-{cancer_type}_{fold}.tsv")
 
 # Files from STM
-STM_SIGNATURES_FILE=join(OUTPUT_DIR, 'stm-exome-signatures_{covariates}_{K}_{project}.tsv')
-SIG_COSINE_PLOT=join(OUTPUT_DIR, "{method}-cosine-similarity_{covariates}_{K}_{project}.pdf")
+STM_SIGNATURES_FILE=join(OUTPUT_DIR, 'stm-exome-signatures_{covariates}_{K}_TCGA-LUNG.tsv')
+SIG_COSINE_PLOT=join(OUTPUT_DIR, "{method}-cosine-similarity_{covariates}_{K}_TCGA-{cancer_type}.pdf")
 STM_HELDOUT_LIKELIHOOD_FILE=join(OUTPUT_DIR, 'stm-heldout-likelihood_{covariates}_{K}_TCGA-LUNG_{fold}.tsv')
 STM_COMBINED_HELDOUT_LIKELIHOOD_FILE=join(OUTPUT_DIR, 'stm-combined-heldout_{covariates}_{project}.tsv')
 LIKELIHOOD_PLOT=join(OUTPUT_DIR,'likelihood-plot_{covariates1}_{covariates2}_TCGA-LUNG.pdf')
+SIG_PLOT=join(OUTPUT_DIR, "{method}-signatures_{covariates}_{K}_{project}.pdf")
+TOPIC_EXPOSURE_PLOT=join(OUTPUT_DIR, "stm-exposure-plot_{covariates}_{K}_TCGA-{cancer_type}_{topic}_{category}.pdf")
+STM_ALL_NORMALIZED_EXPOSURES_FILE=join(OUTPUT_DIR, 'stm-all-normalized-exposures_{covariates}_{K}_TCGA-{cancer_type}.tsv')
+
+
 # Parameters
 seed="123456"
 N_FOLDS=5
 FOLDS=range(0, N_FOLDS)
 LUNG_CANCERS=["LUAD", "LUSC"]
 
-covariates="Smoker+LUAD+LUSC+nMuts+Age+LST+MSI"
+covariates="Smoker+LUAD+LUSC+Age+LST+MSI"
 
 MIN_K=2
 MAX_K=10
@@ -52,7 +57,22 @@ K_RANGE=range(MIN_K, MAX_K+1, 1)
 
 rule all:
     input:
-        expand(STM_COMBINED_HELDOUT_LIKELIHOOD_FILE, covariates=covariates, project="TCGA-LUNG"),
+        expand(TOPIC_EXPOSURE_PLOT, covariates=covariates, cancer_type="LUNG", K=6, topic="Topic6", category="LUSC")
+        # expand(STM_COMBINED_HELDOUT_LIKELIHOOD_FILE, covariates=covariates, project="TCGA-LUAD"),
+
+rule plot_topic_exposures:
+    input:
+        STM_ALL_NORMALIZED_EXPOSURES_FILE,
+        FEATURE_FILE
+    output:
+        TOPIC_EXPOSURE_PLOT
+    script:
+        "../src/plot_exposures.py"
+
+
+rule compare_to_cosmic:
+    input:
+        expand(SIG_COSINE_PLOT, method="stm", covariates="nMuts+LST+MSI", K=6, cancer_type="LUSC")
 
 rule model_selection:
     input:
