@@ -14,6 +14,7 @@ RAW_DIR = 'raw'
 CLINICAL_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_clinical.tsv")
 LST_FEATURE_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_LST_feature.tsv")
 MSI_CLASSIFICATION_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_msi-classification_Hause2016.tsv")
+APOBEC_EXP_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_APOBEC3_PanCanAtlas.tsv")
 RAW_MUTATION_COUNT_MATRIX_FILE=join(RAW_DIR, "TCGA-{cancer_type}_mutation_count.tsv")
 
 # Processed Files
@@ -51,13 +52,15 @@ LUNG_CANCERS=["LUAD", "LUSC"]
 
 covariates="Smoker+LUAD+LUSC+LST+MSI"
 
+single_covariates=["Smoker", "CancerType", "LST", "MSI", "APOBEC3A", "APOBEC3B", "nMuts"]
+
 MIN_K=2
 MAX_K=10
 K_RANGE=range(MIN_K, MAX_K+1, 1)
 
 rule all:
     input:
-        expand(TOPIC_EXPOSURE_PLOT, covariates=covariates, cancer_type="LUNG", K=6, topic="Topic6", category="LUSC")
+        expand(STM_SIGNATURES_FILE, covariates="APOBEC3A+APOBEC3B", cancer_type=["LUSC"], K=5)
         # expand(STM_COMBINED_HELDOUT_LIKELIHOOD_FILE, covariates=covariates, project="TCGA-LUAD"),
 
 rule plot_topic_exposures:
@@ -72,11 +75,11 @@ rule plot_topic_exposures:
 
 rule compare_to_cosmic:
     input:
-        expand(SIG_COSINE_PLOT, method="stm", covariates="LUSC+LUAD+LST+MSI+Smoker", K=6, cancer_type="LUNG")
+        expand(SIG_COSINE_PLOT, method="stm", covariates="APOBEC3A+APOBEC3B", K=5, cancer_type=["LUNG", "LUSC", "LUAD"])
 
 rule model_selection:
     input:
-        expand(LIKELIHOOD_PLOT, covariates1="NULL", covariates2=covariates, project="TCGA-LUNG"),
+        expand(LIKELIHOOD_PLOT, covariates1="NULL", covariates2=single_covariates, project="TCGA-LUNG"),
 
 rule combine_stm_heldout_likelihood_files:
     input:
@@ -178,6 +181,7 @@ rule clean_feature_mutation_count:
         dataworkflow(CLINICAL_FILE),
         dataworkflow(MSI_CLASSIFICATION_FILE),
         dataworkflow(LST_FEATURE_FILE),
+        dataworkflow(APOBEC_EXP_FILE),
     output:
         ALL_MUTATION_COUNT_MATRIX_FILE,
         ALL_FEATURE_FILE

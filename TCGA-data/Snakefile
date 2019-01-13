@@ -22,6 +22,8 @@ RAW_MUTATION_COUNT_MATRIX_FILE=join(RAW_DIR, "TCGA-{cancer_type}_mutation_count.
 RAW_BRCA_SUBTYPE_FILE=join(RAW_DIR, "TCGA-BRCA_subtype_info.xlsx")
 RAW_MSI_CLASSIFICATION_FILE=join(RAW_DIR, "TCGA-{cancer_type}_msi-classification_Hause2016.tsv")
 RAW_CLINICAL_FILE=join(RAW_DIR, "TCGA-{cancer_type}_clinical.tsv")
+RAW_APOBEC_FILE=join(RAW_DIR, "apobec3_gene_expression.tsv")
+RAW_APOBEC_BINARY_FILE=join(RAW_DIR, "TCGA-{cancer_type}_APOBEC3_expression_cBioPortal.tsv")
 
 # Processed files
 POLE_EXO_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_POLE-exo_feature.tsv")
@@ -34,7 +36,8 @@ DDR_DELETED_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_Deleted_Knijnenburg2018.ts
 BRCA_SUBTYPE_FILE=join(OUTPUT_DIR, "TCGA-BRCA_subtype.tsv")
 MSI_CLASSIFICATION_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_msi-classification_Hause2016.tsv")
 CLINICAL_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_clinical.tsv")
-
+APOBEC_EXP_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_APOBEC3_PanCanAtlas.tsv")
+APOBEC_BINARY_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_APOBEC3_cBioPortal.tsv")
 # rule all:
 #     input:
 #         expand(RAW_CLINICAL_FILE, cancer_type=["LUAD", "LUSC"]
@@ -63,6 +66,23 @@ rule clean_msi_file:
         MSI_CLASSIFICATION_FILE
     script:
         "src/clean_msi_file.py"
+
+rule clean_apobec_exp_file:
+    input:
+        RAW_APOBEC_FILE,
+        RAW_MUTATION_COUNT_MATRIX_FILE
+    output:
+        APOBEC_EXP_FILE
+    script:
+        "src/clean_APOBEC_exp.py"
+
+rule clean_apobec_binary_file:
+    input:
+        RAW_APOBEC_BINARY_FILE,
+    output:
+        APOBEC_BINARY_FILE
+    script:
+        "src/clean_APOBEC_binary.py"
 
 rule clean_pole_file:
     input:
