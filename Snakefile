@@ -44,6 +44,10 @@ STM_EFFECT_PLOT=join(OUTPUT_DIR, 'stm-effect-table_{covariates}_{K}_{project}.pn
 STM_HELDOUT_LIKELIHOOD_RATIO_FILE=join(OUTPUT_DIR, 'stm-heldout-ratio_{covariates}_{K}_{project}.tsv')
 COMBINED_HELDOUT_LIKELIHOOD_FILE=join(OUTPUT_DIR, 'stm-combined-heldout_{covariates}_{project}.tsv')
 LIKELIHOOD_PLOT=join(OUTPUT_DIR,'likelihood-plot_{covariates1}_{covariates2}_{project}.pdf')
+# Model Component Files
+SIGMA_FILE=join(OUTPUT_DIR, 'stm-sigma_{covariates}_{K}_{project}.tsv')
+GAMMA_FILE=join(OUTPUT_DIR, 'stm-gamma_{covariates}_{K}_{project}.tsv')
+
 # Parameters
 seed="123456"
 
@@ -115,7 +119,9 @@ rule run_stm:
     output:
         STM_ALL_NORMALIZED_EXPOSURES_FILE,
         STM_EXOME_SIGNATURES_FILE,
-        STM_EFFECT_TABLE
+        STM_EFFECT_TABLE,
+        SIGMA_FILE,
+        GAMMA_FILE
     script:
         "src/run_stm.R"
 

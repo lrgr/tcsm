@@ -54,6 +54,10 @@ TOPIC_EXPOSURE_PLOT=join(OUTPUT_DIR, "stm-exposure-plot_{covariates}_{K}_TCGA-{c
 SS_NORMALIZED_EXPOSURES_FILE=join(OUTPUT_DIR, 'SS-{partition}-normalized-exposures_NULL_{K}_TCGA-{cancertype}_{fold}.tsv')
 STM_EXOME_SIGNATURES_FILE=join(OUTPUT_DIR, 'stm-exome-signatures_{covariates}_{K}_TCGA-{cancertype}.tsv')
 
+# Model Files
+SIGMA_FILE=join(OUTPUT_DIR, 'stm-sigma_{covariates}_{K}_TCGA-{cancertype}.tsv')
+GAMMA_FILE=join(OUTPUT_DIR, 'stm-gamma_{covariates}_{K}_TCGA-{cancertype}.tsv')
+COV_SIG_FILE=join(OUTPUT_DIR, 'stm-covariate-significance_{covariates}_{K}_TCGA-{cancertype}.tsv')
 seed="123456"
 
 N_FOLDS=5
@@ -73,7 +77,8 @@ combined_covariates = "+".join(predictive_covariates)
 
 rule all:
     input:
-        expand(STM_EXOME_SIGNATURES_FILE, covariates="BRCA1BRCA2RAD51C+Age+nMuts", K=K, cancertype="BRCA")
+        expand(COV_SIG_FILE, covariates="BRCA1BRCA2RAD51C", K=K, cancertype="BRCA")
+        # expand(STM_EXOME_SIGNATURES_FILE, covariates="BRCA1BRCA2RAD51C+Age+nMuts", K=K, cancertype="BRCA")
         # expand(SS_NORMALIZED_EXPOSURES_FILE, partition="test", cancertype=["BRCA"], fold=FOLDS, K=5)
         # expand(SS_NORMALIZED_EXPOSURES_FILE, K=K, project="TCGA-BRCA"),
         # expand(SIG_COSINE_PLOT, covariates=["BRCA1BRCA2RAD51C", "LST", "NULL"], method="stm", K=K, project="TCGA-BRCA"),
@@ -88,6 +93,18 @@ rule all:
         # expand(SIG_COSINE_PLOT, covariates=["BRCA1BRCA2RAD51C", "LST"], K=K, project="TCGA-BRCA"),
         # expand(STM_BOXPLOT, K=K, covariates="BRCA1BRCA2RAD51C", cancer_type="BRCA"),
         # expand(SS_NUM_SIG_FILE, project=["TCGA-BRCA"]),
+
+rule covariate_significance:
+    input:
+        SIGMA_FILE,
+        GAMMA_FILE
+    params:
+        seed=seed
+    output:
+        COV_SIG_FILE
+    script:
+        "../src/simulate_logistic_normal.py"
+
 
 rule model_selection:
     input:
