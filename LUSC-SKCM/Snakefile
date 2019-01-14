@@ -33,8 +33,8 @@ STM_HELDOUT_LIKELIHOOD_FILE=join(OUTPUT_DIR, 'stm-heldout-likelihood_{covariates
 STM_COMBINED_HELDOUT_LIKELIHOOD_FILE=join(OUTPUT_DIR, 'stm-combined-heldout_{covariates}_{project}.tsv')
 LIKELIHOOD_PLOT=join(OUTPUT_DIR,'likelihood-plot_{covariates1}_{covariates2}_TCGA-LUNG.pdf')
 SIG_PLOT=join(OUTPUT_DIR, "{method}-signatures_{covariates}_{K}_{project}.pdf")
-STM_HELDOUT_LIKELIHOOD_RATIO_FILE=join(OUTPUT_DIR, 'stm-heldout-ratio_{covariates}_{K}_TCGA-{cancer_type}_{fold}.tsv')
-STM_BOXPLOT=join(OUTPUT_DIR, "stm-boxplot_{covariates}_{K}_TCGA-{cancer_type}.pdf")
+STM_HELDOUT_LIKELIHOOD_RATIO_FILE=join(OUTPUT_DIR, 'stm-heldout-ratio_{covariate_of_interest}_{covariates}_{K}_TCGA-{cancer_type}_{fold}.tsv')
+STM_BOXPLOT=join(OUTPUT_DIR, "stm-boxplot_{covariate_of_interest}_{covariates}_{K}_TCGA-{cancer_type}.pdf")
 # Parameters
 seed="123456"
 N_FOLDS=20
@@ -48,12 +48,13 @@ K_RANGE=range(MIN_K, MAX_K+1, 1)
 
 rule all:
     input:
-        expand(STM_BOXPLOT, method="stm", covariates=covariates, cancer_type="LUNG", K=6)
+        expand(STM_HELDOUT_LIKELIHOOD_RATIO_FILE, covariate_of_interest=covariates, covariates=covariates, fold=FOLDS, K=4, cancer_type="LUNG"),
+        # expand(STM_BOXPLOT, method="stm", covariates=covariates, cancer_type="LUNG", K=4)
         # expand(STM_COMBINED_HELDOUT_LIKELIHOOD_FILE, covariates=covariates, project="TCGA-LUAD"),
 
 rule plot_heldout_ratio:
     input:
-        expand(STM_HELDOUT_LIKELIHOOD_RATIO_FILE, covariates="{covariates}", fold=FOLDS, K="{K}", cancer_type="{cancer_type}")
+        expand(STM_HELDOUT_LIKELIHOOD_RATIO_FILE, covariates="{covariates}", covariate_of_interest="{covariates_of_interest}", fold=FOLDS, K="{K}", cancer_type="{cancer_type}")
     output:
         STM_BOXPLOT
     script:
@@ -61,7 +62,7 @@ rule plot_heldout_ratio:
 
 rule compare_to_cosmic:
     input:
-        expand(SIG_COSINE_PLOT, method="stm", covariates="nMuts+LST+MSI", K=6, cancer_type="LUSC")
+        expand(SIG_COSINE_PLOT, method="stm", covariates=covariates, K=4, cancer_type="LUNG")
 
 rule model_selection:
     input:

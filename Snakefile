@@ -41,7 +41,7 @@ STM_GENOME_SIGNATURES_FILE=join(OUTPUT_DIR, 'stm-genome-signatures_{covariates}_
 STM_HELDOUT_LIKELIHOOD_FILE=join(OUTPUT_DIR, 'stm-heldout-likelihood_{covariates}_{K}_{project}.tsv')
 STM_EFFECT_TABLE=join(OUTPUT_DIR, 'stm-effect-table_{covariates}_{K}_{project}.tsv')
 STM_EFFECT_PLOT=join(OUTPUT_DIR, 'stm-effect-table_{covariates}_{K}_{project}.png')
-STM_HELDOUT_LIKELIHOOD_RATIO_FILE=join(OUTPUT_DIR, 'stm-heldout-ratio_{covariates}_{K}_{project}.tsv')
+STM_HELDOUT_LIKELIHOOD_RATIO_FILE=join(OUTPUT_DIR, 'stm-heldout-ratio_{covariate_of_interest}_{covariates}_{K}_{project}.tsv')
 COMBINED_HELDOUT_LIKELIHOOD_FILE=join(OUTPUT_DIR, 'stm-combined-heldout_{covariates}_{project}.tsv')
 LIKELIHOOD_PLOT=join(OUTPUT_DIR,'likelihood-plot_{covariates1}_{covariates2}_{project}.pdf')
 # Model Component Files

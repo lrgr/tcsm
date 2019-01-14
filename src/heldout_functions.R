@@ -27,13 +27,16 @@ make.heldout.obj <- function(train.mutation.count.file, test.mutation.count.file
   heldout
 }
 
-get.heldout.ratio <- function(train.feature.file, test.feature.file, heldout, K, seed, covariates){
+get.heldout.ratio <- function(train.feature.file, test.feature.file, heldout, K, seed, covariates, covariate_of_interest){
   train.feature.data <- read.delim(train.feature.file, sep = '\t', header = TRUE, row.names=1)
   test.feature.data <- read.delim(test.feature.file, sep = '\t', header = TRUE, row.names=1)
+  # print(train.feature.data)
+  covariate.options <- sort(unique(train.feature.data[,covariate_of_interest]))
+  stopifnot(length(covariate.options) == 2)
   test.brcad.data <- test.feature.data
-  test.brcad.data[covariates] <- 1
+  test.brcad.data[,covariate_of_interest] <- covariate.options[1]
   test.brcap.data <- test.feature.data
-  test.brcap.data[covariates] <- 0
+  test.brcap.data[,covariate_of_interest] <- covariate.options[2]
   brcad.feature.data <- rbind(train.feature.data, test.brcad.data)
   brcap.feature.data <- rbind(train.feature.data, test.brcap.data)
   covariate.formula <- as.formula(paste0("~", covariates))
