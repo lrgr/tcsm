@@ -1,0 +1,172 @@
+from os.path import join
+
+subworkflow dataworkflow:
+    workdir:
+        "../TCGA-data"
+
+include: "../Snakefile"
+include: '../signature-visualization/Snakefile'
+
+OUTPUT_DIR = 'processed'
+RAW_DIR = 'raw'
+
+# Files from TCGA-data subworkflow
+CLINICAL_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_clinical.tsv")
+LST_FEATURE_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_LST_feature.tsv")
+MSI_CLASSIFICATION_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_msi-classification_Hause2016.tsv")
+RAW_MUTATION_COUNT_MATRIX_FILE=join(RAW_DIR, "TCGA-{cancer_type}_mutation_count.tsv")
+
+# Processed Files
+# these include all samples
+MC_FILE=join(OUTPUT_DIR, "mutation-count-all_TCGA-{cancer_type}.tsv")
+FEATURE_FILE=join(OUTPUT_DIR, "features-all_TCGA-{cancer_type}.tsv")
+
+TEST_FEATURE_FILE=join(OUTPUT_DIR, "features-test_TCGA-{cancer_type}_{fold}.tsv")
+TEST_MC_FILE=join(OUTPUT_DIR, "mutation-count-test_TCGA-{cancer_type}_{fold}.tsv")
+TRAIN_FEATURE_FILE=join(OUTPUT_DIR, "features-train_TCGA-{cancer_type}_{fold}.tsv")
+TRAIN_MC_FILE=join(OUTPUT_DIR, "mutation-count-train_TCGA-{cancer_type}_{fold}.tsv")
+
+# Files from STM
+STM_SIGNATURES_FILE=join(OUTPUT_DIR, 'stm-exome-signatures_{covariates}_{K}_TCGA-LUNG.tsv')
+SIG_COSINE_PLOT=join(OUTPUT_DIR, "{method}-cosine-similarity_{covariates}_{K}_TCGA-{cancer_type}.pdf")
+STM_HELDOUT_LIKELIHOOD_FILE=join(OUTPUT_DIR, 'stm-heldout-likelihood_{covariates}_{K}_TCGA-LUNG_{fold}.tsv')
+STM_COMBINED_HELDOUT_LIKELIHOOD_FILE=join(OUTPUT_DIR, 'stm-combined-heldout_{covariates}_{project}.tsv')
+LIKELIHOOD_PLOT=join(OUTPUT_DIR,'likelihood-plot_{covariates1}_{covariates2}_TCGA-LUNG.pdf')
+SIG_PLOT=join(OUTPUT_DIR, "{method}-signatures_{covariates}_{K}_{project}.pdf")
+STM_HELDOUT_LIKELIHOOD_RATIO_FILE=join(OUTPUT_DIR, 'stm-heldout-ratio_{covariates}_{K}_TCGA-{cancer_type}_{fold}.tsv')
+STM_BOXPLOT=join(OUTPUT_DIR, "stm-boxplot_{covariates}_{K}_TCGA-{cancer_type}.pdf")
+# Parameters
+seed="123456"
+N_FOLDS=20
+FOLDS=range(0, N_FOLDS)
+
+covariates="CancerType"
+CANCER_TYPES=["SKCM", "LUSC"]
+MIN_K=2
+MAX_K=10
+K_RANGE=range(MIN_K, MAX_K+1, 1)
+
+rule all:
+    input:
+        expand(STM_BOXPLOT, method="stm", covariates=covariates, cancer_type="LUNG", K=6)
+        # expand(STM_COMBINED_HELDOUT_LIKELIHOOD_FILE, covariates=covariates, project="TCGA-LUAD"),
+
+rule plot_heldout_ratio:
+    input:
+        expand(STM_HELDOUT_LIKELIHOOD_RATIO_FILE, covariates="{covariates}", fold=FOLDS, K="{K}", cancer_type="{cancer_type}")
+    output:
+        STM_BOXPLOT
+    script:
+        "src/plot_heldout_ratio.py"
+
+rule compare_to_cosmic:
+    input:
+        expand(SIG_COSINE_PLOT, method="stm", covariates="nMuts+LST+MSI", K=6, cancer_type="LUSC")
+
+rule model_selection:
+    input:
+        expand(LIKELIHOOD_PLOT, covariates1="NULL", covariates2="CancerType"),
+
+rule combine_stm_heldout_likelihood_files:
+    input:
+        expand(STM_HELDOUT_LIKELIHOOD_FILE, K = K_RANGE, fold=FOLDS, covariates="{covariates}")
+    output:
+        STM_COMBINED_HELDOUT_LIKELIHOOD_FILE
+    script:
+        "../src/combine_heldout_likelihood_files.py"
+
+
+rule combine_train_mc_file:
+    input:
+        expand(TRAIN_MC_FILE, cancer_type=CANCER_TYPES, fold="{fold}")
+    output:
+        TRAIN_MC_FILE.format(cancer_type="LUNG", fold="{fold}")
+    script:
+        "../src/combine_cancer_specific_files.py"
+
+rule combine_test_mc_file:
+    input:
+        expand(TEST_MC_FILE, cancer_type=CANCER_TYPES, fold="{fold}")
+    output:
+        TEST_MC_FILE.format(cancer_type="LUNG", fold="{fold}")
+    script:
+        "../src/combine_cancer_specific_files.py"
+
+rule combine_train_feature_file:
+    input:
+        expand(TRAIN_FEATURE_FILE, cancer_type=CANCER_TYPES, fold="{fold}")
+    output:
+        TRAIN_FEATURE_FILE.format(cancer_type="LUNG", fold="{fold}")
+    script:
+        "../src/combine_cancer_specific_files.py"
+
+rule combine_test_feature_file:
+    input:
+        expand(TEST_FEATURE_FILE, cancer_type=CANCER_TYPES, fold="{fold}")
+    output:
+        TEST_FEATURE_FILE.format(cancer_type="LUNG", fold="{fold}")
+    script:
+        "../src/combine_cancer_specific_files.py"
+
+rule combine_feature_files:
+    input:
+        expand(FEATURE_FILE, cancer_type=CANCER_TYPES)
+    output:
+        FEATURE_FILE.format(cancer_type="LUNG")
+    script:
+        "../src/combine_cancer_specific_files.py"
+
+rule combine_mutation_count_files:
+    input:
+        expand(MC_FILE, cancer_type=CANCER_TYPES)
+    output:
+        MC_FILE.format(cancer_type="LUNG")
+    script:
+        "../src/combine_cancer_specific_files.py"
+
+rule split_test_training_data:
+    wildcard_constraints:
+        cancer_type="LUSC|SKCM"
+    input:
+        MC_FILE,
+        FEATURE_FILE
+    params:
+        seed=seed,
+        n_folds=N_FOLDS
+    output:
+        TEST_MC_FILE,
+        TRAIN_MC_FILE,
+        TEST_FEATURE_FILE,
+        TRAIN_FEATURE_FILE
+    script:
+        "../src/split_test_training_data.py"
+
+# rule split_validate_training:
+#     wildcard_constraints:
+#         cancer_type="SKCM|LUSC"
+#     input:
+#         ALL_MUTATION_COUNT_MATRIX_FILE,
+#         ALL_FEATURE_FILE
+#     params:
+#         seed=seed
+#     output:
+#         VALIDATE_MC_FILE,
+#         MC_FILE,
+#         VALIDATE_FEATURE_FILE,
+#         FEATURE_FILE
+#     script:
+#         "../src/split_training_validate_data.py"
+
+rule clean_feature_mutation_count:
+    wildcard_constraints:
+        cancer_type="SKCM|LUSC"
+    params:
+        seed=seed
+    input:
+        dataworkflow(RAW_MUTATION_COUNT_MATRIX_FILE),
+        dataworkflow(CLINICAL_FILE),
+    output:
+        MC_FILE,
+        FEATURE_FILE
+    script:
+        "../src/create_feature_file.py"
