@@ -9,19 +9,22 @@ rcParams['font.family'] = 'Courier New'
 
 if __name__ == '__main__':
     output = []
-    for i in range(0, len(snakemake.input)):
-        out = re.split("_|\.", snakemake.input[i])
-        model = out[1]
-        print(model)
-        df = pd.read_csv(snakemake.input[i], sep="\t", index_col=0).transpose()
-        df.index = [model]
+    for f in snakemake.input:
+        # get the covariates used from the filename
+        out = re.split("_|\.", f)
+        covariates = out[1]
+        # stored as one column with one row for each K
+        df = pd.read_csv(f, sep="\t", index_col=0).transpose()
+        df.index = [covariates]
         output.append(df)
     df = pd.concat(output)
-    df.index = [m.replace("BRCA+GBM+OV+LUAD+UCEC+KIRC+HNSC+LGG+THCA+LUSC+PRAD+SKCM+COAD+STAD+LAML+ESCA+PAAD", "CancerType") for m in df.index]
+    df.index = [m.replace("NULL", "No Covariates") for m in df.index]
+    df.index = [m.replace("BRCA1BRCA2RAD51C", "Biallelic HR Covariate") for m in df.index]
+    df.index = [m.replace("HRINACTIVATIONS", "Biallelic Inactivtion of any HR Gene") for m in df.index]
     models = df.index.unique()
-
-    plt.plot(df.loc[models[0]].transpose(), color="r", marker="o")
-    plt.plot(df.loc[models[1]].transpose(), color="b", marker="o")
+    df = df.transpose()
+    for c in df.columns:
+        plt.plot(df[c], label=c)
     plt.xlabel("Number K Signatures Used")
     plt.legend()
     plt.ylabel("Log Likelihood")

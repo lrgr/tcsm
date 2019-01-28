@@ -6,6 +6,10 @@ RAW_DIR = 'raw'
 wildcard_constraints:
     cancer_type="[A-Z]+"
 
+subworkflow dinucsworkflow:
+    workdir:
+        "../TCGA-dinucs"
+
 # URLS
 SBS96_COUNT_URL = "https://obj.umiacs.umd.edu/mutation-signature-explorer/mutations/PanCanAtlas/processed/counts/counts.TCGA-{cancer_type}_{cancer_type}_mc3.v0.2.8.SBS-96.tsv"
 BRCA_SUBTYPE_URL = "https://www.cell.com/cms/10.1016/j.ccell.2018.03.014/attachment/ca04da67-7e4b-4930-8eb8-5c941eebf6b7/mmc4.xlsx"
@@ -24,7 +28,9 @@ RAW_MSI_CLASSIFICATION_FILE=join(RAW_DIR, "TCGA-{cancer_type}_msi-classification
 RAW_CLINICAL_FILE=join(RAW_DIR, "TCGA-{cancer_type}_clinical.tsv")
 RAW_APOBEC_FILE=join(RAW_DIR, "apobec3_gene_expression.tsv")
 RAW_APOBEC_BINARY_FILE=join(RAW_DIR, "TCGA-{cancer_type}_APOBEC3_expression_cBioPortal.tsv")
-
+RAW_ALEXANDROV2018_DNP_FILE=join(RAW_DIR, "TCGA_dinucs_Alexandrov2018.csv")
+FIREHOSE_DNP_FILE = join(OUTPUT_DIR, "gdac.broadinstitute.org_{cancer_type}.Mutation_Packager_Oncotated_Calls.Level_3.2016012800.0.0" + ".patient_DNP_map.tsv")
+CANCERTYPE_ALEXANDROV2018_DNP_FILE=join(RAW_DIR, "TCGA-{cancer_type}_dinucs_Alexandrov2018.tsv")
 # Processed files
 POLE_EXO_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_POLE-exo_feature.tsv")
 HR_FEATURE_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_HRd_feature.tsv")
@@ -38,18 +44,26 @@ MSI_CLASSIFICATION_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_msi-classification_
 CLINICAL_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_clinical.tsv")
 APOBEC_EXP_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_APOBEC3_PanCanAtlas.tsv")
 APOBEC_BINARY_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_APOBEC3_cBioPortal.tsv")
-# rule all:
-#     input:
-#         expand(RAW_CLINICAL_FILE, cancer_type=["LUAD", "LUSC"]
-# rule all:
-#     input:
-#         expand(POLE_EXO_FILE, cancer_type="BRCA"),
-#         expand(HR_FEATURE_FILE, cancer_type="BRCA"),
-#         expand(LST_FEATURE_FILE, cancer_type="BRCA"),
-#         expand(HR_BIALLELIC_INACTIVATION_FILE, cancer_type="BRCA"),
-#         expand(DDR_SILENCING_FILE, cancer_type="BRCA"),
-#         expand(DDR_MUTATED_FILE, cancer_type="BRCA"),
-#         expand(DDR_DELETED_FILE, cancer_type="BRCA"),
+CC_TT_DINUCS_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_dinucs.tsv")
+
+
+rule split_dinucs_by_cancertype:
+    input:
+        RAW_MUTATION_COUNT_MATRIX_FILE,
+        RAW_ALEXANDROV2018_DNP_FILE
+    output:
+        CANCERTYPE_ALEXANDROV2018_DNP_FILE
+    script:
+        "src/split_dinucs_by_cancertype.py"
+
+rule combine_dinucs:
+    input:
+        CANCERTYPE_ALEXANDROV2018_DNP_FILE,
+        dinucsworkflow(FIREHOSE_DNP_FILE)
+    output:
+        CC_TT_DINUCS_FILE
+    script:
+        "src/combine_dinucs.py"
 
 rule clean_clinical_file:
     input:

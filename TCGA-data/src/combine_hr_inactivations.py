@@ -30,5 +30,7 @@ if __name__ == '__main__':
     feature_df["BRCA1BRCA2RAD51CFANCM"] = feature_df["BRCA1BRCA2RAD51CFANCM"].apply(lambda x: min(x, 1))
     feature_df["BRCA1BRCA2RAD51CFANCF"] = feature_df["BRCA1BRCA2RAD51C"] + feature_df["FANCF"]
     feature_df["BRCA1BRCA2RAD51CFANCF"] = feature_df["BRCA1BRCA2RAD51CFANCF"].apply(lambda x: min(x, 1))
+    feature_df["HRINACTIVATIONS"] = feature_df["BRCA1"]+feature_df["BRCA2"]+ feature_df["RAD51C"] + feature_df["ATM"] + feature_df["CHEK2"] + feature_df["FANCM"] + feature_df["FANCF"]
+    feature_df["HRINACTIVATIONS"] = feature_df["HRINACTIVATIONS"].apply(lambda x: min(x, 1))
     feature_df = feature_df.sort_index()
     feature_df.to_csv(snakemake.output[0], sep="\t")

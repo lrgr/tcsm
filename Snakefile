@@ -25,14 +25,14 @@ GENOME_TRINUCLEOTIDE_COUNTS = join(dirname(srcdir("Snakefile")), "genome_trinucl
 
 # Output files
 # Exposures and Signatures
-STM_NORMALIZED_EXPOSURES_FILE=join(OUTPUT_DIR, 'stm-{partition}-normalized-exposures_{covariates}_{K}_{project}.tsv')
-STM_COUNT_EXPOSURES_FILE=join(OUTPUT_DIR, 'stm-{partition}-count-exposures_{covariates}_{K}_{project}.tsv')
+# STM_NORMALIZED_EXPOSURES_FILE=join(OUTPUT_DIR, 'stm-{partition}-normalized-exposures_{covariate_of_interest}_{covariates}_{K}_{project}.tsv')
+# STM_COUNT_EXPOSURES_FILE=join(OUTPUT_DIR, 'stm-{partition}-count-exposures_{covariate_of_interest}_{covariates}_{K}_{project}.tsv')
 STM_ALL_NORMALIZED_EXPOSURES_FILE=join(OUTPUT_DIR, 'stm-all-normalized-exposures_{covariates}_{K}_{project}.tsv')
-STM_TEST_NORMALIZED_EXPOSURES_FILE=join(OUTPUT_DIR, 'stm-test-normalized-exposures_{covariates}_{K}_{project}.tsv')
-STM_TRAIN_NORMALIZED_EXPOSURES_FILE=join(OUTPUT_DIR, 'stm-train-normalized-exposures_{covariates}_{K}_{project}.tsv')
-STM_TRAIN_SIGNATURES_FILE=join(OUTPUT_DIR, 'stm-train-signatures_{covariates}_{K}_{project}.tsv')
-STM_ALL_COUNT_EXPOSURES_FILE=join(OUTPUT_DIR, 'stm-all-count-exposures_{covariates}_{K}_{project}.tsv')
-STM_TEST_COUNT_EXPOSURES_FILE=join(OUTPUT_DIR, 'stm-test-count-exposures_{covariates}_{K}_{project}.tsv')
+STM_TEST_NORMALIZED_EXPOSURES_FILE=join(OUTPUT_DIR, 'stm-test-normalized-exposures_{covariate_of_interest}_{covariates}_{K}_{project}.tsv')
+STM_TRAIN_NORMALIZED_EXPOSURES_FILE=join(OUTPUT_DIR, 'stm-train-normalized-exposures_{covariate_of_interest}_{covariates}_{K}_{project}.tsv')
+STM_TRAIN_SIGNATURES_FILE=join(OUTPUT_DIR, 'stm-train-signatures_{covariate_of_interest}_{covariates}_{K}_{project}.tsv')
+# STM_ALL_COUNT_EXPOSURES_FILE=join(OUTPUT_DIR, 'stm-all-count-exposures_{covariate_of_interest}_{covariates}_{K}_{project}.tsv')
+STM_TEST_COUNT_EXPOSURES_FILE=join(OUTPUT_DIR, 'stm-test-count-exposures_{covariate_of_interest}_{covariates}_{K}_{project}.tsv')
 STM_TRAIN_COUNT_EXPOSURES_FILE=join(OUTPUT_DIR, 'stm-train-count-exposures_{covariates}_{K}_{project}.tsv')
 
 STM_EXOME_SIGNATURES_FILE=join(OUTPUT_DIR, 'stm-exome-signatures_{covariates}_{K}_{project}.tsv')
@@ -51,24 +51,24 @@ GAMMA_FILE=join(OUTPUT_DIR, 'stm-gamma_{covariates}_{K}_{project}.tsv')
 # Parameters
 seed="123456"
 
-rule convert_normalized_exposures_to_counts:
-    input:
-        STM_NORMALIZED_EXPOSURES_FILE,
-        MC_FILE
-    output:
-        STM_COUNT_EXPOSURES_FILE
-    script:
-        "src/convert_normalized_to_count_exposures.py"
+# rule convert_normalized_exposures_to_counts:
+#     input:
+#         STM_NORMALIZED_EXPOSURES_FILE,
+#         MC_FILE
+#     output:
+#         STM_COUNT_EXPOSURES_FILE
+#     script:
+#         "src/convert_normalized_to_count_exposures.py"
 
-rule convert_exome_sigs_to_genome_sigs:
-    input:
-        EXOME_TRINUCLEOTIDE_COUNTS,
-        GENOME_TRINUCLEOTIDE_COUNTS,
-        STM_EXOME_SIGNATURES_FILE
-    output:
-        STM_GENOME_SIGNATURES_FILE
-    script:
-        "src/normalize_exome_sigs_to_genome_sigs.py"
+# rule convert_exome_sigs_to_genome_sigs:
+#     input:
+#         EXOME_TRINUCLEOTIDE_COUNTS,
+#         GENOME_TRINUCLEOTIDE_COUNTS,
+#         STM_EXOME_SIGNATURES_FILE
+#     output:
+#         STM_GENOME_SIGNATURES_FILE
+#     script:
+#         "src/normalize_exome_sigs_to_genome_sigs.py"
 
 rule plot_likelihoods:
     input:

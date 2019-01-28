@@ -2,13 +2,13 @@ library(stm)
 
 
 run.stm <- function(mutation.count.file, feature.file, covariates, K, seed, exposure.output.file, signature.output.file){
+  #covariate.list <- strsplit(covariates, "\\+")[[1]]
+  #print(c("default", covariate.list))
   mc.data <- read.delim(mutation.count.file, sep = '\t', header = TRUE, check.names=FALSE, row.names=1)
   mat <- data.matrix(mc.data)
   corpus <- readCorpus(mat, type="dtm")
   prep <- prepDocuments(corpus$documents, corpus$vocab)
   feature.data <- read.delim(feature.file, sep = '\t', header = TRUE, row.names=1)
-  covariates <- gsub("CANCERTYPE", "LAML+ACC+BLCA+LGG+BRCA+CESC+CHOL+COAD+ESCA+GBM+HNSC+KICH+KIRC+KIRP+LIHC+LUAD+LUSC+DLBC+MESO+OV+PAAD+PCPG+PRAD+READ+SARC+SKCM+STAD+TGCT+THYM+THCA+UCS+UCEC+UVM", covariates)
-  covariates <- gsub("ONCOTISSUE", "Myeloid+Lymphoid+Thymus+Ovary+Uterus+Cervix+Breast+Bladder+Prostate+SoftTissue+Kidney+Thyroid+Stomach+AdrenalGland+Bowel+Liver+Pancreas+Biliary+Lung+Pleura+CNS+Skin+Eye+HeadNeck", covariates)
   covariate.formula <- as.formula(paste0("~", covariates))
   stm1 <- stm(documents=prep$documents, vocab=prep$vocab, K=K, seed=seed,
               prevalence = covariate.formula, max.em.its = 500, data=feature.data,
@@ -16,12 +16,18 @@ run.stm <- function(mutation.count.file, feature.file, covariates, K, seed, expo
   effect <- estimateEffect(covariate.formula, stm1, metadata=feature.data)
   effect.summary <- summary(effect)
   print(effect.summary)
+  tc <- topicCorr(stm1, method="simple")
+  print(tc)
+  # plot.topicCorr(tc)
   effect.tables <- effect.summary$tables
   results <- lapply(effect.summary$tables, function(x) x[, "Estimate"])
   effect.frame <- as.data.frame(do.call(rbind, results))
   write.table(effect.frame, file=snakemake@output[[3]], sep="\t")
-  print(stm1$mu$gamma)
-  print(stm1$sigma)
+  covariate.list <- strsplit(covariates, "\\+")[[1]]
+  gamma <- stm1$mu$gamma
+  rownames(gamma) <- c("default", covariate.list)
+  write.table(gamma, file=snakemake@output[[5]], sep="\t")
+  write.table(stm1$sigma, file=snakemake@output[[4]], sep="\t")
   # plot.estimateEffect(prep)
   # searchK(documents = train.out$documents, vocab = train.out$vocab, K=seq(3, 10))
   # process the signatures and save them

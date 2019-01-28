@@ -2,7 +2,7 @@ library(stm)
 source(snakemake@params[[2]])
 
 
-run.stm <- function(train.mutation.count.file, test.mutation.count.file, train.feature.file, test.feature.file, covariates, K, seed, train.exposures.file, test.exposures.file, signature.output.file){
+run.stm <- function(train.mutation.count.file, test.mutation.count.file, train.feature.file, test.feature.file, covariates, K, seed, train.exposures.file, test.exposures.file, signature.output.file, covariate_of_interest){
   # run the model on just the training data
   train.prep <- load.stm.documents(train.mutation.count.file)
   train.feature.data <- read.delim(train.feature.file, sep = '\t', header = TRUE, row.names=1)
@@ -18,13 +18,14 @@ run.stm <- function(train.mutation.count.file, test.mutation.count.file, train.f
   test.feature.data <- read.delim(test.feature.file, sep = '\t', header = TRUE, row.names=1)
   heldout <- make.heldout.obj(train.mutation.count.file, test.mutation.count.file)
   if (covariates != "NULL"){
-    heldout.ratio <- get.heldout.ratio(train.feature.file, test.feature.file, heldout, K, seed, covariates)
+    heldout.ratio <- get.heldout.ratio(train.feature.file, test.feature.file, heldout, K, seed, covariates, covariate_of_interest)
     predicted.feature.data <- as.integer(heldout.ratio > 0)
     test.feature.data[covariates] <- predicted.feature.data
   }
   test.results <- fitNewDocuments(model=stm1, documents=test.prep$documents, newData=test.feature.data,
                   origData=train.feature.data, prevalence=covariate.formula)
   test.exposures <- as.data.frame(test.results$theta)
+  print(test.exposures)
   # get the training exposure results
   train.exposures <- make.dt(stm1)
   train.exposures <- subset(train.exposures, select = -c(docnum))
@@ -60,8 +61,10 @@ K <- strtoi(snakemake@wildcards[["K"]])
 train.exposures.file <- snakemake@output[[1]]
 test.exposures.file <- snakemake@output[[2]]
 signatures.file <- snakemake@output[[3]]
+covariates <- snakemake@wildcards[["covariates"]]
+covariate_of_interest <- snakemake@wildcards[["covariate_of_interest"]]
 
 
 run.stm(train.mutation.count.file, test.mutation.count.file, train.feature.file,
-        test.feature.file, snakemake@wildcards[["covariates"]], K, seed, train.exposures.file,
-        test.exposures.file, signatures.file)
+        test.feature.file, covariates, K, seed, train.exposures.file,
+        test.exposures.file, signatures.file, covariate_of_interest)

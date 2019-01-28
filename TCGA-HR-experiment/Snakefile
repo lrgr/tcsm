@@ -41,53 +41,50 @@ TEST_MC_FILE=join(OUTPUT_DIR, "mutation-count-test_TCGA-{cancer_type}_{fold}.tsv
 TRAIN_FEATURE_FILE=join(OUTPUT_DIR, "features-train_TCGA-{cancer_type}_{fold}.tsv")
 TRAIN_MC_FILE=join(OUTPUT_DIR, "mutation-count-train_TCGA-{cancer_type}_{fold}.tsv")
 
-
 # OUTPUT FILES
 STM_HELDOUT_LIKELIHOOD_FILE=join(OUTPUT_DIR, 'stm-heldout-likelihood_{covariates}_{K}_TCGA-{cancer_type}_{fold}.tsv')
 STM_COMBINED_HELDOUT_LIKELIHOOD_FILE=join(OUTPUT_DIR, 'stm-combined-heldout_{covariates}_TCGA-{cancer_type}.tsv')
 STM_ALL_NORMALIZED_EXPOSURES_FILE=join(OUTPUT_DIR, 'stm-all-normalized-exposures_{covariates}_{K}_TCGA-{cancer_type}.tsv')
 LIKELIHOOD_PLOT=join(OUTPUT_DIR,'likelihood-plot_{covariates1}_{covariates2}_TCGA-{cancer_type}.pdf')
-STM_HELDOUT_LIKELIHOOD_RATIO_FILE=join(OUTPUT_DIR, 'stm-heldout-ratio_{covariates}_{K}_TCGA-{cancer_type}_{fold}.tsv')
-LST_PLOT=join(OUTPUT_DIR, "lst-scatterplot_{covariates}_{K}_TCGA-{cancer_type}.pdf")
-STM_BOXPLOT=join(OUTPUT_DIR, "stm-boxplot_{covariates}_{K}_TCGA-{cancer_type}.pdf")
+STM_HELDOUT_LIKELIHOOD_RATIO_FILE=join(OUTPUT_DIR, 'stm-heldout-ratio_{covariate_of_interest}_{covariates}_{K}_TCGA-{cancer_type}_{fold}.tsv')
+LST_PLOT=join(OUTPUT_DIR, "lst-scatterplot_{covariate_of_interest}_{covariates}_{K}_TCGA-{cancer_type}.pdf")
+STM_BOXPLOT=join(OUTPUT_DIR, "stm-boxplot_{covariate_of_interest}_{covariates}_{K}_TCGA-{cancer_type}.pdf")
 TOPIC_EXPOSURE_PLOT=join(OUTPUT_DIR, "stm-exposure-plot_{covariates}_{K}_TCGA-{cancer_type}_{topic}.png")
-SS_NORMALIZED_EXPOSURES_FILE=join(OUTPUT_DIR, 'SS-{partition}-normalized-exposures_NULL_{K}_TCGA-{cancertype}_{fold}.tsv')
-STM_EXOME_SIGNATURES_FILE=join(OUTPUT_DIR, 'stm-exome-signatures_{covariates}_{K}_TCGA-{cancertype}.tsv')
-
+SS_NORMALIZED_EXPOSURES_FILE=join(OUTPUT_DIR, 'SS-{partition}-normalized-exposures_NULL_{K}_TCGA-{cancer_type}_{fold}.tsv')
+STM_EXOME_SIGNATURES_FILE=join(OUTPUT_DIR, 'stm-exome-signatures_{covariates}_{K}_TCGA-{cancer_type}.tsv')
+# Likelihood Plot Files
+ALL_LIKELIHOOD_PLOT=join(OUTPUT_DIR,'likelihood-plot_all-biallelic-inactivations_TCGA-BRCA.pdf')
+LST_HR_BI_COV_LIKELIHOOD_PLOT=join(OUTPUT_DIR,'likelihood-plot_LST-HR-biallelic-covariate_TCGA-BRCA.pdf')
+NULL_HR_BI_COV_LIKELIHOOD_PLOT=join(OUTPUT_DIR,'likelihood-plot_NULL-HR-biallelic-covariate_TCGA-BRCA.pdf')
+HR_BI_COV_LIKELIHOOD_PLOT=join(OUTPUT_DIR,'likelihood-plot_HR-biallelic-covariate_TCGA-BRCA.pdf')
+LST_COMBINED_HR_BI_LIKELIHOOD_PLOT=join(OUTPUT_DIR,'likelihood-plot_LST-combined-HR-biallelic_TCGA-BRCA.pdf')
 # Model Files
-SIGMA_FILE=join(OUTPUT_DIR, 'stm-sigma_{covariates}_{K}_TCGA-{cancertype}.tsv')
-GAMMA_FILE=join(OUTPUT_DIR, 'stm-gamma_{covariates}_{K}_TCGA-{cancertype}.tsv')
-COV_SIG_FILE=join(OUTPUT_DIR, 'stm-covariate-significance_{covariates}_{K}_TCGA-{cancertype}.tsv')
+SIGMA_FILE=join(OUTPUT_DIR, 'stm-sigma_{covariates}_{K}_TCGA-{cancer_type}.tsv')
+GAMMA_FILE=join(OUTPUT_DIR, 'stm-gamma_{covariates}_{K}_TCGA-{cancer_type}.tsv')
+COV_SIG_FILE=join(OUTPUT_DIR, 'stm-covariate-significance_{covariate_of_interest}_{covariates}_{K}_TCGA-{cancer_type}.tsv')
 seed="123456"
 
 N_FOLDS=5
 FOLDS=range(0, N_FOLDS)
 
 MIN_K=2
-MAX_K=20
+MAX_K=10
 K_RANGE=range(MIN_K, MAX_K+1)
-K=[5]
-# these are all the covariates that are inactivated in at least 3 patients
-biallelic_inactivation_covariates = ["biBRCA1", "biBRCA2", "biATM", "biCHEK2", "biFANCM",  "POLEexo"]
-epigenetic_silencing_covariates = ["esBRCA1", "esRAD51C", "esALKBH3", "esFANCF", "esMLH3", "esMLH1"]
-predictive_covariates = ["biBRCA1", "biBRCA2", "biATM", "biCHEK2", "biFANCM",
-              "esBRCA1", "esRAD51C", "esFANCF"]
+K=5
 
-combined_covariates = "+".join(predictive_covariates)
 
 rule all:
     input:
-        expand(COV_SIG_FILE, covariates="BRCA1BRCA2RAD51C", K=K, cancertype="BRCA")
-        # expand(STM_EXOME_SIGNATURES_FILE, covariates="BRCA1BRCA2RAD51C+Age+nMuts", K=K, cancertype="BRCA")
-        # expand(SS_NORMALIZED_EXPOSURES_FILE, partition="test", cancertype=["BRCA"], fold=FOLDS, K=5)
-        # expand(SS_NORMALIZED_EXPOSURES_FILE, K=K, project="TCGA-BRCA"),
-        # expand(SIG_COSINE_PLOT, covariates=["BRCA1BRCA2RAD51C", "LST", "NULL"], method="stm", K=K, project="TCGA-BRCA"),
-        # expand(SIG_COSINE_PLOT, covariates="BRCA1BRCA2RAD51C", method="stm", K=K, project="TCGA-BRCA"),
-        # expand(TOPIC_EXPOSURE_PLOT, covariates=["LST"], K=K, cancer_type="BRCA", topic="Topic8"),
+        NULL_HR_BI_COV_LIKELIHOOD_PLOT,
+        LST_HR_BI_COV_LIKELIHOOD_PLOT,
+        ALL_LIKELIHOOD_PLOT,
+        HR_BI_COV_LIKELIHOOD_PLOT,
+        LST_COMBINED_HR_BI_LIKELIHOOD_PLOT,
+        SIG_COSINE_PLOT.format(covariates="BRCA1BRCA2RAD51C", method="stm", K=K, project="TCGA-BRCA"),
+        SIG_PLOT.format(covariates="BRCA1BRCA2RAD51C", method="stm", project="TCGA-BRCA", K=K),
+        STM_BOXPLOT.format(covariates="BRCA1BRCA2RAD51C", covariate_of_interest="BRCA1BRCA2RAD51C", cancer_type="BRCA", K=K),
+        LST_PLOT.format(covariates="BRCA1BRCA2RAD51C", covariate_of_interest="BRCA1BRCA2RAD51C", cancer_type="BRCA", K=K)
         # expand(LST_PLOT, covariates=["BRCA1BRCA2RAD51C"], cancer_type="BRCA", K=K),
-        # expand(STM_BOXPLOT, covariates=["BRCA1BRCA2RAD51C"], cancer_type="BRCA", K=K),
-        #expand(ALL_FEATURE_FILE, cancer_type="BRCA"),
-        # expand(SIG_PLOT, covariates=["LST"], project="TCGA-BRCA", K=K),
         # expand(LST_PLOT, covariates="BRCA1BRCA2RAD51C", K=K, cancer_type="BRCA"),
         # expand(STM_EFFECT_PLOT, covariates=["BRCA1BRCA2RAD51C", "BRCA1+BRCA2+RAD51C"], project="TCGA-BRCA", K=K),
         # expand(SIG_COSINE_PLOT, covariates=["BRCA1BRCA2RAD51C", "LST"], K=K, project="TCGA-BRCA"),
@@ -97,7 +94,8 @@ rule all:
 rule covariate_significance:
     input:
         SIGMA_FILE,
-        GAMMA_FILE
+        GAMMA_FILE,
+        FEATURE_FILE
     params:
         seed=seed
     output:
@@ -105,10 +103,56 @@ rule covariate_significance:
     script:
         "../src/simulate_logistic_normal.py"
 
-
-rule model_selection:
+rule plot_HR_biallelic_likelihoods:
     input:
-        expand(LIKELIHOOD_PLOT, covariates1=["NULL"], covariates2=["BRCA1BRCA2RAD51C"], cancer_type="BRCA")
+        expand(STM_COMBINED_HELDOUT_LIKELIHOOD_FILE, cancer_type="BRCA",
+               covariates=["BRCA1BRCA2RAD51C"],
+               K=K)
+    output:
+        HR_BI_COV_LIKELIHOOD_PLOT
+    script:
+        "../src/plot_likelihoods.py"
+
+rule plot_LST_combined_HR_biallelic_likelihoods:
+    input:
+        expand(STM_COMBINED_HELDOUT_LIKELIHOOD_FILE, cancer_type="BRCA",
+               covariates=["LST", "HRINACTIVATIONS"],
+               K=K)
+    output:
+        LST_COMBINED_HR_BI_LIKELIHOOD_PLOT
+    script:
+        "../src/plot_likelihoods.py"
+
+rule plot_NULL_HR_biallelic_likelihoods:
+    input:
+        expand(STM_COMBINED_HELDOUT_LIKELIHOOD_FILE, cancer_type="BRCA",
+               covariates=["NULL", "BRCA1BRCA2RAD51C"],
+               K=K)
+    output:
+        NULL_HR_BI_COV_LIKELIHOOD_PLOT
+    script:
+        "../src/plot_likelihoods.py"
+
+rule plot_LST_HR_biallelic_likelihoods:
+    input:
+        expand(STM_COMBINED_HELDOUT_LIKELIHOOD_FILE, cancer_type="BRCA",
+               covariates=["LST", "BRCA1BRCA2RAD51C"],
+               K=K)
+    output:
+        LST_HR_BI_COV_LIKELIHOOD_PLOT
+    script:
+        "../src/plot_likelihoods.py"
+
+rule plot_all_HR_likelihoods:
+    input:
+        expand(STM_COMBINED_HELDOUT_LIKELIHOOD_FILE, cancer_type="BRCA",
+               covariates=["ATM", "BRCA1", "BRCA2", "CHEK2", "FANCM", "FANCF", "LST", "RAD51C"],
+               K=K)
+    output:
+        ALL_LIKELIHOOD_PLOT
+    script:
+        "../src/plot_likelihoods.py"
+
 
 rule plot_topic_exposures:
     input:
@@ -121,7 +165,7 @@ rule plot_topic_exposures:
 
 rule plot_heldout_ratio:
     input:
-        expand(STM_HELDOUT_LIKELIHOOD_RATIO_FILE, covariates="{covariates}", fold=FOLDS, K="{K}", cancer_type="{cancer_type}")
+        expand(STM_HELDOUT_LIKELIHOOD_RATIO_FILE, covariates="{covariates}", covariate_of_interest="{covariate_of_interest}", fold=FOLDS, K="{K}", cancer_type="{cancer_type}")
     output:
         STM_BOXPLOT
     script:
@@ -129,7 +173,7 @@ rule plot_heldout_ratio:
 
 rule plot_LST_by_heldout_ratio:
     input:
-        expand(STM_HELDOUT_LIKELIHOOD_RATIO_FILE, covariates="{covariates}", fold=FOLDS, K="{K}", cancer_type="{cancer_type}")
+        expand(STM_HELDOUT_LIKELIHOOD_RATIO_FILE, covariates="{covariates}", covariate_of_interest="{covariate_of_interest}", fold=FOLDS, K="{K}", cancer_type="{cancer_type}")
     output:
         LST_PLOT
     script:

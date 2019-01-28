@@ -2,9 +2,7 @@
 COSMIC_DIR = 'COSMIC'
 
 COSMIC_GENOME_SIGS_URL='https://obj.umiacs.umd.edu/mutation-signature-explorer/signatures/COSMIC/processed/cosmic-signatures.SBS-96.tsv'
-# SIG_PROFILER_EXOME_SIGS_URL='https://obj.umiacs.umd.edu/mutation-signature-explorer/signatures/PCAWG/processed/sigProfiler-exome_signatures.SBS-96.tsv'
 # Files
-RAW_COSMIC_SIGNATURES = join(COSMIC_DIR, 'raw-cosmic-signatures.tsv')
 COSMIC_SIGNATURES = join(COSMIC_DIR, 'cosmic-signatures.tsv')
 STM_EXOME_SIGNATURES_FILE=join(OUTPUT_DIR, '{method}-exome-signatures_{covariates}_{K}_{project}.tsv')
 STM_GENOME_SIGNATURES_FILE=join(OUTPUT_DIR, '{method}-genome-signatures_{covariates}_{K}_{project}.tsv')
@@ -32,8 +30,6 @@ rule calculate_cosine_similarity:
         SIG_COSINE_SIM
     script:
         "src/plot_cosine_similarity.py"
-
-
 
 rule download_cosmic_signatures:
     params:

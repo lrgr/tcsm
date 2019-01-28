@@ -40,7 +40,7 @@ STM_HELDOUT_LIKELIHOOD_FILE=join(OUTPUT_DIR, 'stm-heldout-likelihood_{covariates
 STM_COMBINED_HELDOUT_LIKELIHOOD_FILE=join(OUTPUT_DIR, 'stm-combined-heldout_{covariates}_{project}.tsv')
 LIKELIHOOD_PLOT=join(OUTPUT_DIR,'likelihood-plot_{covariates1}_{covariates2}_TCGA-LUNG.pdf')
 SIG_PLOT=join(OUTPUT_DIR, "{method}-signatures_{covariates}_{K}_{project}.pdf")
-TOPIC_EXPOSURE_PLOT=join(OUTPUT_DIR, "stm-exposure-plot_{covariates}_{K}_TCGA-{cancer_type}_{topic}_{category}.pdf")
+TOPIC_EXPOSURE_PLOT=join(OUTPUT_DIR, "stm-exposure-plot_{covariates}_{K}_TCGA-{cancer_type}_{topic}_{feature}.pdf")
 STM_ALL_NORMALIZED_EXPOSURES_FILE=join(OUTPUT_DIR, 'stm-all-normalized-exposures_{covariates}_{K}_TCGA-{cancer_type}.tsv')
 
 
@@ -51,17 +51,20 @@ FOLDS=range(0, N_FOLDS)
 LUNG_CANCERS=["LUAD", "LUSC"]
 
 covariates="Smoker+LUAD+LUSC+LST+MSI"
-
+combined_covariates="Smoker+CancerType+APOBEC3A+APOBEC3B+nMuts"
 single_covariates=["Smoker", "CancerType", "LST", "MSI", "APOBEC3A", "APOBEC3B", "nMuts"]
 
 MIN_K=2
 MAX_K=10
 K_RANGE=range(MIN_K, MAX_K+1, 1)
+K=6
 
 rule all:
     input:
-        expand(STM_SIGNATURES_FILE, covariates="APOBEC3A+APOBEC3B", cancer_type=["LUSC"], K=5)
-        # expand(STM_COMBINED_HELDOUT_LIKELIHOOD_FILE, covariates=covariates, project="TCGA-LUAD"),
+        #expand(TOPIC_EXPOSURE_PLOT, covariates=combined_covariates, cancer_type="LUNG", K=7, topic=["Topic1", "Topic4","Topic6"], feature="Smoker"),
+        #expand(TOPIC_EXPOSURE_PLOT, covariates=combined_covariates, cancer_type="LUNG", K=7, topic=["Topic3"], feature="CancerType"),
+        #expand(STM_SIGNATURES_FILE, covariates=combined_covariates, cancer_type=["LUNG"], K=7),
+        expand(SIG_PLOT, method="stm", covariates=combined_covariates, project="TCGA-LUNG", K=K),
 
 rule plot_topic_exposures:
     input:
@@ -75,11 +78,11 @@ rule plot_topic_exposures:
 
 rule compare_to_cosmic:
     input:
-        expand(SIG_COSINE_PLOT, method="stm", covariates="APOBEC3A+APOBEC3B", K=5, cancer_type=["LUNG", "LUSC", "LUAD"])
+        expand(SIG_COSINE_PLOT, method="stm", covariates=combined_covariates, K=K, cancer_type=["LUNG"])
 
 rule model_selection:
     input:
-        expand(LIKELIHOOD_PLOT, covariates1="NULL", covariates2=single_covariates, project="TCGA-LUNG"),
+        expand(LIKELIHOOD_PLOT, covariates1="NULL", covariates2=combined_covariates, project="TCGA-LUNG"),
 
 rule combine_stm_heldout_likelihood_files:
     input:
@@ -155,21 +158,15 @@ rule split_test_training_data:
     script:
         "../src/split_test_training_data.py"
 
-rule split_validate_training:
-    wildcard_constraints:
-        cancer_type="LUAD|LUSC"
+rule remove_suspect_mel_samples:
     input:
         ALL_MUTATION_COUNT_MATRIX_FILE,
         ALL_FEATURE_FILE
-    params:
-        seed=seed
     output:
-        VALIDATE_MC_FILE,
         MC_FILE,
-        VALIDATE_FEATURE_FILE,
         FEATURE_FILE
     script:
-        "../src/split_training_validate_data.py"
+        "src/remove_suspect_mel_samples.py"
 
 rule clean_feature_mutation_count:
     wildcard_constraints:

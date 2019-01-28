@@ -15,11 +15,11 @@ if __name__ == '__main__':
     feature_df = pd.read_csv(snakemake.input[1], sep="\t", index_col=0)
     df = exposure_df.merge(feature_df, left_index=True, right_index=True)
     topic = snakemake.wildcards["topic"]
-    gene=snakemake.wildcards["category"]
-    ax = sns.swarmplot(x=gene, y=topic, data=df)
+    feature=snakemake.wildcards["feature"]
+    ax = sns.swarmplot(x=feature, y=topic, data=df)
     # plt.legend()
     plt.legend(ncol=1, loc='upper center')
-    ax = sns.boxplot(x=gene, y=topic, data=df, showcaps=False, boxprops={'facecolor':'None'}, showfliers=False, whiskerprops={'linewidth':0})
+    ax = sns.boxplot(x=feature, y=topic, data=df, showcaps=False, boxprops={'facecolor':'None'}, showfliers=False, whiskerprops={'linewidth':0})
     #ax.set_xlabel('Held-out Samples')
     # plt.show()
     plt.savefig(snakemake.output[0])
