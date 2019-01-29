@@ -1,0 +1,59 @@
+from os.path import join, dirname
+
+include: '../Snakefile'
+
+# Files
+SS_NUM_SIG_FILE=join(OUTPUT_DIR, "model-selection_SS_{project}.tsv")
+SS_TRAIN_EXOME_SIGNATURES_FILE=join(OUTPUT_DIR, 'SS-train-signatures_NULL_NULL_{K}_{project}.tsv')
+SS_ALL_EXOME_SIGNATURES_FILE=join(OUTPUT_DIR, 'SS-all-signatures_NULL_{K}_{project}.tsv')
+SS_NORMALIZED_ALL_EXPOSURES_FILE=join(OUTPUT_DIR, 'SS-all-normalized-exposures_NULL_{K}_{project}.tsv')
+SS_NORMALIZED_TEST_EXPOSURES_FILE=join(OUTPUT_DIR, 'SS-test-normalized-exposures_NULL_NULL_{K}_{project}.tsv')
+SS_NORMALIZED_TRAIN_EXPOSURES_FILE=join(OUTPUT_DIR, 'SS-train-normalized-exposures_NULL_NULL_{K}_{project}.tsv')
+TEST_MC_FILE=join(OUTPUT_DIR, "mutation-count-test_{project}.tsv")
+TRAIN_MC_FILE=join(OUTPUT_DIR, "mutation-count-train_{project}.tsv")
+ALL_MC_FILE=join(OUTPUT_DIR, "mutation-count-all_{project}.tsv")
+
+rule ss_all:
+    input:
+        expand(SS_NORMALIZED_ALL_EXPOSURES_FILE, project=["TCGA-BRCA_0"], K=5)
+
+rule estimate_exposures:
+    input:
+        mf=TEST_MC_FILE,
+        sig=SS_TRAIN_EXOME_SIGNATURES_FILE
+    output:
+        SS_NORMALIZED_TEST_EXPOSURES_FILE
+    shell:
+        "python ../signature-estimation-py/signature_estimation.py -mf {input.mf} -sf {input.sig} -of {output}"
+
+rule assess_num_signatures:
+    params:
+        seed="12345"
+    input:
+        MC_FILE
+    output:
+        SS_NUM_SIG_FILE
+    script:
+        'src/assess_num_signatures.R'
+
+rule run_somatic_signatures_all:
+    params:
+        seed="12345"
+    input:
+        ALL_MC_FILE
+    output:
+        SS_ALL_EXOME_SIGNATURES_FILE,
+        SS_NORMALIZED_ALL_EXPOSURES_FILE
+    script:
+        "src/run_somatic_signatures.R"
+
+rule run_somatic_signatures_train:
+    params:
+        seed="12345"
+    input:
+        TRAIN_MC_FILE
+    output:
+        SS_TRAIN_EXOME_SIGNATURES_FILE,
+        SS_NORMALIZED_TRAIN_EXPOSURES_FILE
+    script:
+        "src/run_somatic_signatures.R"
