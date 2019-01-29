@@ -40,14 +40,14 @@ SIG_COSINE_PLOT=join(OUTPUT_DIR, "{method}-cosine-similarity_{covariates}_{K}_TC
 STM_HELDOUT_LIKELIHOOD_FILE=join(OUTPUT_DIR, 'stm-heldout-likelihood_{covariates}_{K}_TCGA-LUSCSKCM_{fold}.tsv')
 STM_COMBINED_HELDOUT_LIKELIHOOD_FILE=join(OUTPUT_DIR, 'stm-combined-heldout_{covariates}_TCGA-{cancer_type}.tsv')
 LIKELIHOOD_PLOT=join(OUTPUT_DIR,'likelihood-plot_{covariates1}_{covariates2}_TCGA-LUNG.pdf')
-SIG_PLOT=join(OUTPUT_DIR, "{method}-signatures_{covariates}_{K}_{project}.pdf")
+SIG_PLOT=join(OUTPUT_DIR, "{method}-signatures_{covariates}_{K}_TCGA-LUSCSKCM.pdf")
 STM_HELDOUT_LIKELIHOOD_RATIO_FILE=join(OUTPUT_DIR, 'stm-heldout-ratio_{covariate_of_interest}_{covariates}_{K}_TCGA-{cancer_type}_{fold}.tsv')
 COMBINED_STM_HELDOUT_LIKELIHOOD_RATIO_FILE=join(OUTPUT_DIR, 'stm-combined-heldout-ratio_{covariate_of_interest}_{covariates}_{K}_TCGA-{cancer_type}.tsv')
 STM_BOXPLOT=join(OUTPUT_DIR, "stm-boxplot_{covariate_of_interest}_{covariates}_{K}_TCGA-{cancer_type}.pdf")
 SKCM_ENRICHMENT_FILE=join(OUTPUT_DIR, "stm-skcm-enrichment_{covariate_of_interest}_{covariates}_{K}_TCGA-{cancer_type}.pdf")
 RATIO_DNP_SCATTER_PLOT=join(OUTPUT_DIR, "stm-dnp-plot_{covariate_of_interest}_{covariates}_{K}_TCGA-{cancer_type}.pdf")
 NULL_CANCERTYPE_COVARIATE_LIKELIHOOD_PLOT=join(OUTPUT_DIR,'likelihood-plot_null-cancertype-covariate_TCGA-LUSCSKCM.pdf')
-
+CANCERTYPE_LUSC_SKCM_LIKELIHOOD_PLOT=join(OUTPUT_DIR,'likelihood-plot_cancertype-LUSC-SKCM-covariate_TCGA-LUSCSKCM.pdf')
 # Model Files
 SIGMA_FILE=join(OUTPUT_DIR, 'stm-sigma_{covariates}_{K}_TCGA-{cancer_type}.tsv')
 GAMMA_FILE=join(OUTPUT_DIR, 'stm-gamma_{covariates}_{K}_TCGA-{cancer_type}.tsv')
@@ -57,12 +57,32 @@ seed="123456"
 N_FOLDS=5
 FOLDS=range(0, N_FOLDS)
 
-all_covariates="CancerType+Smoker+DNPs"
+all_covariates="SKCM+LUSC+Smoker+DNPs"
+cancertype_covariates="SKCM+LUSC"
 CANCER_TYPES=["SKCM", "LUSC"]
 MIN_K=2
 MAX_K=10
 K_RANGE=range(MIN_K, MAX_K+1, 1)
 K=4
+
+
+rule figure_3:
+    input:
+        NULL_CANCERTYPE_COVARIATE_LIKELIHOOD_PLOT,
+        SIG_COSINE_PLOT.format(method="stm", covariates="CancerType", K=K, cancer_type="LUSCSKCM"),
+        RATIO_DNP_SCATTER_PLOT.format(covariate_of_interest="CancerType", covariates="CancerType", K=K, cancer_type="LUSCSKCM")
+
+rule supplemental_figures:
+    input:
+        SIG_PLOT.format(method="stm", covariates="CancerType", K=K),
+        CANCERTYPE_LUSC_SKCM_LIKELIHOOD_PLOT
+
+rule calculate_covariate_significance:
+    input:
+        COV_SIG_FILE.format(covariates="LUSC+SKCM", covariate_of_interest="LUSC", cancer_type="LUSCSKCM", K=K),
+        COV_SIG_FILE.format(covariates="LUSC+SKCM", covariate_of_interest="SKCM", cancer_type="LUSCSKCM", K=K)
+
+
 rule all:
     input:
         # expand(STM_SIGNATURES_FILE, covariates=covariates, K=4)
@@ -109,16 +129,23 @@ rule calculate_enrichment:
 
 rule ratio_dnp_scatter_plot:
     input:
-        COMBINED_STM_HELDOUT_LIKELIHOOD_RATIO_FILE,
-        dataworkflow(expand(CC_TT_DINUCS_FILE, cancer_type=["LUSC", "SKCM"])),
+        COMBINED_STM_HELDOUT_LIKELIHOOD_RATIO_FILE
     output:
         RATIO_DNP_SCATTER_PLOT
     script:
         "src/plot_ratio_dnp.py"
 
+rule plot_likelihood_cancertype_LUSC_SKCM:
+    input:
+        expand(STM_COMBINED_HELDOUT_LIKELIHOOD_FILE, covariates=["LUSC+SKCM", "CancerType"], cancer_type="LUSCSKCM")
+    output:
+        CANCERTYPE_LUSC_SKCM_LIKELIHOOD_PLOT
+    script:
+        "../src/plot_likelihoods.py"
+
 rule plot_likelihood_cancertype_allcovariate_null:
     input:
-        expand(STM_COMBINED_HELDOUT_LIKELIHOOD_FILE, covariates=["NULL", "CancerType", all_covariates], cancer_type="LUSCSKCM")
+        expand(STM_COMBINED_HELDOUT_LIKELIHOOD_FILE, covariates=["NULL", cancertype_covariates, all_covariates], cancer_type="LUSCSKCM")
     output:
         NULL_CANCERTYPE_COVARIATE_LIKELIHOOD_PLOT
     script:

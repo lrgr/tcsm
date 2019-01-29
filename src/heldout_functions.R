@@ -31,7 +31,8 @@ get.heldout.ratio <- function(train.feature.file, test.feature.file, heldout, K,
   train.feature.data <- read.delim(train.feature.file, sep = '\t', header = TRUE, row.names=1)
   test.feature.data <- read.delim(test.feature.file, sep = '\t', header = TRUE, row.names=1)
   # print(train.feature.data)
-  covariate.options <- sort(unique(train.feature.data[,covariate_of_interest]))
+  covariate.options <- sort(unique(train.feature.data[,covariate_of_interest]), decreasing=TRUE
+)
   stopifnot(length(covariate.options) == 2)
   test.brcad.data <- test.feature.data
   test.brcad.data[,covariate_of_interest] <- covariate.options[1]

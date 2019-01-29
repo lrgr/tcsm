@@ -1,5 +1,7 @@
+from os.path import join
 
 COSMIC_DIR = 'COSMIC'
+OUTPUT_DIR = 'processed'
 
 COSMIC_GENOME_SIGS_URL='https://obj.umiacs.umd.edu/mutation-signature-explorer/signatures/COSMIC/processed/cosmic-signatures.SBS-96.tsv'
 # Files
@@ -20,6 +22,16 @@ rule plot_signatures:
         SIG_PLOT
     script:
         "src/plot_sigs.py"
+
+rule calculate_COSMIC_cosine_similarity:
+    input:
+        COSMIC_SIGNATURES,
+        COSMIC_SIGNATURES,
+    output:
+        join(OUTPUT_DIR, "COSMIC-cosine-similarity.pdf"),
+        join(OUTPUT_DIR, "COSMIC-cosine-similarity.tsv"),
+    script:
+        "src/plot_cosine_similarity.py"
 
 rule calculate_cosine_similarity:
     input:

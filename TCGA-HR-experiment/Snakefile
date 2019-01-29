@@ -52,12 +52,14 @@ STM_BOXPLOT=join(OUTPUT_DIR, "stm-boxplot_{covariate_of_interest}_{covariates}_{
 TOPIC_EXPOSURE_PLOT=join(OUTPUT_DIR, "stm-exposure-plot_{covariates}_{K}_TCGA-{cancer_type}_{topic}.png")
 SS_NORMALIZED_EXPOSURES_FILE=join(OUTPUT_DIR, 'SS-{partition}-normalized-exposures_NULL_{K}_TCGA-{cancer_type}_{fold}.tsv')
 STM_EXOME_SIGNATURES_FILE=join(OUTPUT_DIR, 'stm-exome-signatures_{covariates}_{K}_TCGA-{cancer_type}.tsv')
+
 # Likelihood Plot Files
 ALL_LIKELIHOOD_PLOT=join(OUTPUT_DIR,'likelihood-plot_all-biallelic-inactivations_TCGA-BRCA.pdf')
 LST_HR_BI_COV_LIKELIHOOD_PLOT=join(OUTPUT_DIR,'likelihood-plot_LST-HR-biallelic-covariate_TCGA-BRCA.pdf')
 NULL_HR_BI_COV_LIKELIHOOD_PLOT=join(OUTPUT_DIR,'likelihood-plot_NULL-HR-biallelic-covariate_TCGA-BRCA.pdf')
 HR_BI_COV_LIKELIHOOD_PLOT=join(OUTPUT_DIR,'likelihood-plot_HR-biallelic-covariate_TCGA-BRCA.pdf')
-LST_COMBINED_HR_BI_LIKELIHOOD_PLOT=join(OUTPUT_DIR,'likelihood-plot_LST-combined-HR-biallelic_TCGA-BRCA.pdf')
+LST_COMBINED_HR_ALL_HR_LIKELIHOOD_PLOT=join(OUTPUT_DIR,'likelihood-plot_LST-combined-HR-all-HR_TCGA-BRCA.pdf')
+
 # Model Files
 SIGMA_FILE=join(OUTPUT_DIR, 'stm-sigma_{covariates}_{K}_TCGA-{cancer_type}.tsv')
 GAMMA_FILE=join(OUTPUT_DIR, 'stm-gamma_{covariates}_{K}_TCGA-{cancer_type}.tsv')
@@ -72,24 +74,25 @@ MAX_K=10
 K_RANGE=range(MIN_K, MAX_K+1)
 K=5
 
-
-rule all:
+rule figure_2:
     input:
         NULL_HR_BI_COV_LIKELIHOOD_PLOT,
-        LST_HR_BI_COV_LIKELIHOOD_PLOT,
-        ALL_LIKELIHOOD_PLOT,
-        HR_BI_COV_LIKELIHOOD_PLOT,
-        LST_COMBINED_HR_BI_LIKELIHOOD_PLOT,
         SIG_COSINE_PLOT.format(covariates="BRCA1BRCA2RAD51C", method="stm", K=K, project="TCGA-BRCA"),
-        SIG_PLOT.format(covariates="BRCA1BRCA2RAD51C", method="stm", project="TCGA-BRCA", K=K),
         STM_BOXPLOT.format(covariates="BRCA1BRCA2RAD51C", covariate_of_interest="BRCA1BRCA2RAD51C", cancer_type="BRCA", K=K),
         LST_PLOT.format(covariates="BRCA1BRCA2RAD51C", covariate_of_interest="BRCA1BRCA2RAD51C", cancer_type="BRCA", K=K)
-        # expand(LST_PLOT, covariates=["BRCA1BRCA2RAD51C"], cancer_type="BRCA", K=K),
-        # expand(LST_PLOT, covariates="BRCA1BRCA2RAD51C", K=K, cancer_type="BRCA"),
-        # expand(STM_EFFECT_PLOT, covariates=["BRCA1BRCA2RAD51C", "BRCA1+BRCA2+RAD51C"], project="TCGA-BRCA", K=K),
-        # expand(SIG_COSINE_PLOT, covariates=["BRCA1BRCA2RAD51C", "LST"], K=K, project="TCGA-BRCA"),
-        # expand(STM_BOXPLOT, K=K, covariates="BRCA1BRCA2RAD51C", cancer_type="BRCA"),
-        # expand(SS_NUM_SIG_FILE, project=["TCGA-BRCA"]),
+
+rule supplemental_figures:
+    input:
+        LST_COMBINED_HR_ALL_HR_LIKELIHOOD_PLOT,
+        SIG_PLOT.format(covariates="BRCA1BRCA2RAD51C", method="stm", project="TCGA-BRCA", K=K)
+
+rule COSMIC_cosine_similarity_plot:
+    input:
+        SIG_COSINE_PLOT.format(covariates="BRCA1BRCA2RAD51C", method="stm", K=K, project="TCGA-BRCA"),
+
+rule calculate_covariate_significance:
+    input:
+        COV_SIG_FILE.format(covariates="BRCA1BRCA2RAD51C", covariate_of_interest="BRCA1BRCA2RAD51C", cancer_type="BRCA", K=K)
 
 rule covariate_significance:
     input:
@@ -113,13 +116,13 @@ rule plot_HR_biallelic_likelihoods:
     script:
         "../src/plot_likelihoods.py"
 
-rule plot_LST_combined_HR_biallelic_likelihoods:
+rule plot_LST_all_HR_combined_HR_likelihoods:
     input:
         expand(STM_COMBINED_HELDOUT_LIKELIHOOD_FILE, cancer_type="BRCA",
-               covariates=["LST", "HRINACTIVATIONS"],
+               covariates=["LST", "BRCA1BRCA2RAD51C", "HRINACTIVATIONS"],
                K=K)
     output:
-        LST_COMBINED_HR_BI_LIKELIHOOD_PLOT
+        LST_COMBINED_HR_ALL_HR_LIKELIHOOD_PLOT
     script:
         "../src/plot_likelihoods.py"
 
@@ -153,6 +156,13 @@ rule plot_all_HR_likelihoods:
     script:
         "../src/plot_likelihoods.py"
 
+rule plot_LST_heldout_ratio:
+    input:
+        LST_PLOT.format(covariate_of_interest="BRCA1BRCA2RAD51C", covariates="BRCA1BRCA2RAD51C", K=K, cancer_type="BRCA")
+
+rule plot_HR_heldout_boxplot:
+    input:
+        STM_BOXPLOT.format(K=K,covariate_of_interest="BRCA1BRCA2RAD51C", covariates="BRCA1BRCA2RAD51C", cancer_type="BRCA")
 
 rule plot_topic_exposures:
     input:

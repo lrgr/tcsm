@@ -4,7 +4,7 @@ import matplotlib as plt
 import seaborn as sns; sns.set_style('whitegrid')
 from matplotlib import rcParams
 rcParams.update({'figure.autolayout': True})
-rcParams['font.family'] = 'Courier New'
+# rcParams['font.family'] = 'Courier New'
 
 
 if __name__ == '__main__':
@@ -17,9 +17,9 @@ if __name__ == '__main__':
     M = cosine_similarity(exp_sigs, gt_sigs)
     df = pd.DataFrame(data=M, index=range(1, len(exp_sigs.index)+1), columns=range(1, len(gt_sigs.index)+1))
     df.to_csv(snakemake.output[1], sep="\t")
-    ax = sns.heatmap(df, annot=True)
-    ax.set(ylabel="COSMIC", xlabel="TCSM")
+    ax = sns.heatmap(df, annot=True, cbar_kws={'label': 'Cosine similarity'})
+    ax.set_ylabel("COSMIC")
+    ax.set_xlabel("TCSM", fontname='Courier New')
     fig = ax.get_figure()
+
     fig.savefig(snakemake.output[0])
-    # print(df)
-    # df.to_csv(snakemake.output[0], sep="\t")

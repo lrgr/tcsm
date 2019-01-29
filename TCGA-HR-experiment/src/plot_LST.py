@@ -21,5 +21,5 @@ if __name__ == '__main__':
     df = df.loc[df[gene] == 0]
     print(ranksums(df.loc[df[heldout] > 0]["LST"], df.loc[df[heldout] < 0]["LST"]))
     ax = sns.scatterplot(x=heldout, y="LST", data=df)
-    ax.set(xlabel="Held-out log likelihood ratio", ylabel="Number of LST")
+    ax.set(xlabel="Held-out Log Likelihood Ratio (LLR)", ylabel="LST Count")
     plt.savefig(snakemake.output[0])

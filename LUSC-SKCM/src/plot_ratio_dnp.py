@@ -3,25 +3,22 @@ import matplotlib.pyplot as plt
 import seaborn as sns; sns.set_style('whitegrid')
 from matplotlib import rcParams
 rcParams.update({'figure.autolayout': True})
-rcParams['font.family'] = 'Courier New'
 
 if __name__ == '__main__':
-    ratio_df = pd.read_csv(snakemake.input[0], sep="\t", index_col=0)
-    dnp_df = pd.concat([pd.read_csv(snakemake.input[1], sep="\t", index_col=0), pd.read_csv(snakemake.input[2], sep="\t", index_col=0)])
-    #print(ratio_df)
-    #print(dnp_df)
+    df = pd.read_csv(snakemake.input[0], sep="\t", index_col=0)
+    #dnp_df = pd.concat([pd.read_csv(snakemake.input[1], sep="\t", index_col=0), pd.read_csv(snakemake.input[2], sep="\t", index_col=0)])
     heldout = "heldout.ratio"
     feature = "CancerType"
-    df = dnp_df.merge(ratio_df, left_index=True, right_index=True)
+    # df = dnp_df.merge(ratio_df, left_index=True, right_index=True)
     print(df.shape)
     DNP_cutoff = 15
     # first plot the points with DNP count <= DNP_cutoff
-    ax = sns.swarmplot(x=feature, y=heldout, data=df.loc[df["count"]<=DNP_cutoff], marker=".", label="a")#color="b")
+    ax = sns.swarmplot(x=feature, y=heldout, data=df.loc[df["DNPs"]<=DNP_cutoff], marker=".", label="a")#color="b")
     # now plot the points with DNP count > DNP_cutoff
-    ax = sns.swarmplot(x=feature, y=heldout, data=df.loc[df["count"]>DNP_cutoff], marker="*", label="b") #color="r")
+    ax = sns.swarmplot(x=feature, y=heldout, data=df.loc[df["DNPs"]>DNP_cutoff], marker="*", label="b") #color="r")
     handles, labels = ax.get_legend_handles_labels()
-    labels = ["LUSC <= {} UV DNPs".format(DNP_cutoff), "SKCM <= {} UV DNPs".format(DNP_cutoff),
-              "LUSC > {} UV DNPs".format(DNP_cutoff), "SKCM > {} UV DNPs".format(DNP_cutoff)]
+    labels = ["LUSC <= {} CC>TT".format(DNP_cutoff), "SKCM <= {} CC>TT".format(DNP_cutoff),
+              "LUSC > {} CC>TT".format(DNP_cutoff), "SKCM > {} CC>TT".format(DNP_cutoff)]
     # handles[0]
     ax.legend([handle for i,handle in enumerate(handles)], [label for i,label in enumerate(labels)])
     # print(ax.legend())
@@ -30,7 +27,7 @@ if __name__ == '__main__':
     # plt.legend(loc='lower center')
     # plt.legend(ncol=2)
     ax = sns.boxplot(x=feature, y=heldout, data=df, showcaps=False, boxprops={'facecolor':'None'}, showfliers=False, whiskerprops={'linewidth':0})
-    ax.set(xlabel="Cancer Type", ylabel="Held-out log likelihood ratio")
+    ax.set(xlabel="Cancer Type", ylabel="Held-out Log Likelihood Ratio (LLR)")
     # plt.legend(handles=[m])
     #plt.colorbar()
     # lusc_df = df.loc[df["CancerType"] == "LUSC"]

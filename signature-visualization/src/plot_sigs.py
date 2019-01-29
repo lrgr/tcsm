@@ -26,9 +26,10 @@ from mutation_signatures_visualization import plot_signatures
 
 # Load the signatures and the counts
 sigs = pd.read_csv(snakemake.input[0], sep="\t", index_col=0)
+sigs.index = [i.replace("Topic", "Signature ") for i in sigs.index]
 # Load the exposures
 exposures = pd.read_csv(snakemake.input[1], sep="\t", index_col=0)
-
+exposures.columns = [i.replace("Topic", "Signature ") for i in exposures.columns]
 
 # Load the counts
 sbs96_df = pd.read_csv(snakemake.input[2], sep='\t', index_col=0)
