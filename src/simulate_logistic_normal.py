@@ -1,6 +1,6 @@
 import pandas as pd, numpy as np
 import math
-from scipy.stats import ranksums
+from scipy.stats import mannwhitneyu
 from statsmodels.stats.multitest import fdrcorrection
 
 def simulate_logistic_normal(mean, cov, n_draws):
@@ -28,6 +28,7 @@ if __name__ == '__main__':
     # identify if any other covariates exist (because if so, we need to sample them)
     covariate_list = snakemake.wildcards["covariates"].split("+")
     other_covariates = list(set(covariate_list).difference([covariate_of_interest]))
+    print(other_covariates)
     if len(other_covariates) == 0:
         cov = sigma_df.values
         mean = gamma_df.loc["default"].values
@@ -65,17 +66,16 @@ if __name__ == '__main__':
         covariate_exposures = pd.concat(output)
         print(covariate_exposures)
     print(np.size(mean, axis=0))
-    print(np.size(mean, axis=1))
     topics = ["Topic{}".format(i) for i in range(1, np.size(mean, axis=1)+2)]
     output = []
     for topic in topics:
-        ranksum_result = ranksums(covariate_exposures[topic], default_exposures[topic])
+        ranksum_result = mannwhitneyu(x=covariate_exposures[topic], y=default_exposures[topic], alternative='greater')
         print(ranksum_result)
         data = [ranksum_result[0], ranksum_result[1], np.mean(covariate_exposures[topic]), np.mean(default_exposures[topic])]
-        s = pd.Series(data=data, index=["Wilcoxon Statistic", "Wilcoxon p-value", "covariate mean", "default mean"])
+        s = pd.Series(data=data, index=["Mann-Whitney U Statistic", "Mann-Whitney U p-value", "covariate mean", "default mean"])
         output.append(s)
     df = pd.concat(output, axis=1).transpose()
     # calculate the FDR - how?
 
-    df["Wilcoxon FDR"] = fdrcorrection(df["Wilcoxon p-value"])[1]
+    df["Wilcoxon FDR"] = fdrcorrection(df["Mann-Whitney U p-value"])[1]
     df.to_csv(snakemake.output[0], sep="\t")

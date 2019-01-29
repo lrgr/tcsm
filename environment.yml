@@ -1,4 +1,4 @@
-name: 'stm-signatures'
+name: 'tcsm'
 channels:
   - conda-forge
   - defaults
@@ -12,3 +12,4 @@ dependencies:
   - matplotlib
   - scikit-learn
   - seaborn
+  - xlrd

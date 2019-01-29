@@ -39,10 +39,12 @@ STM_SIGNATURES_FILE=join(OUTPUT_DIR, 'stm-exome-signatures_{covariates}_{K}_TCGA
 SIG_COSINE_PLOT=join(OUTPUT_DIR, "{method}-cosine-similarity_{covariates}_{K}_TCGA-{cancer_type}.pdf")
 STM_HELDOUT_LIKELIHOOD_FILE=join(OUTPUT_DIR, 'stm-heldout-likelihood_{covariates}_{K}_TCGA-LUSCSKCM_{fold}.tsv')
 STM_COMBINED_HELDOUT_LIKELIHOOD_FILE=join(OUTPUT_DIR, 'stm-combined-heldout_{covariates}_TCGA-{cancer_type}.tsv')
-LIKELIHOOD_PLOT=join(OUTPUT_DIR,'likelihood-plot_{covariates1}_{covariates2}_TCGA-LUNG.pdf')
 SIG_PLOT=join(OUTPUT_DIR, "{method}-signatures_{covariates}_{K}_TCGA-LUSCSKCM.pdf")
 STM_HELDOUT_LIKELIHOOD_RATIO_FILE=join(OUTPUT_DIR, 'stm-heldout-ratio_{covariate_of_interest}_{covariates}_{K}_TCGA-{cancer_type}_{fold}.tsv')
 COMBINED_STM_HELDOUT_LIKELIHOOD_RATIO_FILE=join(OUTPUT_DIR, 'stm-combined-heldout-ratio_{covariate_of_interest}_{covariates}_{K}_TCGA-{cancer_type}.tsv')
+
+# Plots
+LIKELIHOOD_PLOT=join(OUTPUT_DIR,'likelihood-plot_{covariates1}_{covariates2}_TCGA-LUNG.pdf')
 STM_BOXPLOT=join(OUTPUT_DIR, "stm-boxplot_{covariate_of_interest}_{covariates}_{K}_TCGA-{cancer_type}.pdf")
 SKCM_ENRICHMENT_FILE=join(OUTPUT_DIR, "stm-skcm-enrichment_{covariate_of_interest}_{covariates}_{K}_TCGA-{cancer_type}.pdf")
 RATIO_DNP_SCATTER_PLOT=join(OUTPUT_DIR, "stm-dnp-plot_{covariate_of_interest}_{covariates}_{K}_TCGA-{cancer_type}.pdf")
@@ -81,21 +83,6 @@ rule calculate_covariate_significance:
     input:
         COV_SIG_FILE.format(covariates="LUSC+SKCM", covariate_of_interest="LUSC", cancer_type="LUSCSKCM", K=K),
         COV_SIG_FILE.format(covariates="LUSC+SKCM", covariate_of_interest="SKCM", cancer_type="LUSCSKCM", K=K)
-
-
-rule all:
-    input:
-        # expand(STM_SIGNATURES_FILE, covariates=covariates, K=4)
-        # expand(COV_SIG_FILE, covariate_of_interest="Smoker", covariates=covariates, K=K, cancer_type="LUSCSKCM"),
-        # expand(COMBINED_DNP_FILE, cancer_type=["LUSC", "SKCM"]),
-        # expand(RATIO_DNP_SCATTER_PLOT, covariate_of_interest=covariates, covariates=covariates, K=4, cancer_type="LUNG"),
-        # dinucsworkflow(expand(FIREHOSE_DNP_FILE, cancer_type=["LUSC", "SKCM"])),
-        # expand(MC_FILE, cancer_type="SKCM"),
-        # expand(SKCM_ENRICHMENT_FILE, covariate_of_interest=covariates, covariates=covariates, K=4, cancer_type="LUNG"),
-        # expand(STM_BOXPLOT, method="stm", covariate_of_interest="CancerType", covariates="CancerType+Smoker+DNPs", cancer_type="LUSCSKCM", K=4),
-        # expand(STM_BOXPLOT, method="stm", covariate_of_interest="SKCM", covariates="SKCM+LUSC", cancer_type="LUSCSKCM", K=4),
-        # expand(SIG_COSINE_PLOT, method="stm", covariates=covariates, K=4, cancer_type="LUSCSKCM"),
-        # expand(STM_COMBINED_HELDOUT_LIKELIHOOD_FILE, covariates=covariates, project="TCGA-LUAD"),
 
 
 rule covariate_significance:
