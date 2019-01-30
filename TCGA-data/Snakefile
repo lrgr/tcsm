@@ -11,7 +11,7 @@ subworkflow dinucsworkflow:
         "../TCGA-dinucs"
 
 # URLS
-SBS96_COUNT_URL = "https://obj.umiacs.umd.edu/mutation-signature-explorer/mutations/PanCanAtlas/processed/counts/counts.TCGA-{cancer_type}_{cancer_type}_mc3.v0.2.8.SBS-96.tsv"
+SBS96_COUNT_URL = "https://obj.umiacs.umd.edu/mutation-signature-explorer/mutations/PanCanAtlas/processed/counts/counts.TCGA-{cancer_type}_{cancer_type}_mc3.v0.2.8.WXS.SBS-96.tsv"
 # BRCA_SUBTYPE_URL = "https://www.cell.com/cms/10.1016/j.ccell.2018.03.014/attachment/ca04da67-7e4b-4930-8eb8-5c941eebf6b7/mmc4.xlsx"
 CLINICAL_URL="https://obj.umiacs.umd.edu/mutation-signature-explorer/clinical/PanCanAtlas/processed/clinical.TCGA_{cancer_type}.tsv"
 
