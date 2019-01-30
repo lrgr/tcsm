@@ -4,6 +4,7 @@ include: '../Snakefile'
 
 # Files
 SS_NUM_SIG_FILE=join(OUTPUT_DIR, "model-selection_SS_{project}.tsv")
+SS_NUM_SIG_PLOT=join(OUTPUT_DIR, "model-selection_SS_{project}.pdf")
 SS_TRAIN_EXOME_SIGNATURES_FILE=join(OUTPUT_DIR, 'SS-train-signatures_NULL_NULL_{K}_{project}.tsv')
 SS_ALL_EXOME_SIGNATURES_FILE=join(OUTPUT_DIR, 'SS-all-signatures_NULL_{K}_{project}.tsv')
 SS_NORMALIZED_ALL_EXPOSURES_FILE=join(OUTPUT_DIR, 'SS-all-normalized-exposures_NULL_{K}_{project}.tsv')

@@ -12,8 +12,8 @@ print(dim(mat))
 mat <- mat[as.logical(rowSums(mat != 0)), ]
 out <- assessNumberSignatures(mat, 2:10, nReplicates=5)
 write.table(out, file=snakemake@output[[1]], sep="\t")
-#plot.obj <- plotNumberSignatures(out)
-#ggsave(snakemake@output[[1]], plot=plot.obj)
+plot.obj <- plotNumberSignatures(out)
+ggsave(snakemake@output[[2]], plot=plot.obj)
 # print(out)
 # their signatures matrix is categories-by-signatures
 # our expected format for signatures is signatures-by-categories
