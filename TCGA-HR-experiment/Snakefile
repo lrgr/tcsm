@@ -77,20 +77,29 @@ rule figure_2:
         STM_BOXPLOT.format(covariates="BRCA1BRCA2RAD51C", covariate_of_interest="BRCA1BRCA2RAD51C", cancer_type="BRCA", K=K),
         LST_PLOT.format(covariates="BRCA1BRCA2RAD51C", covariate_of_interest="BRCA1BRCA2RAD51C", cancer_type="BRCA", K=K)
 
-rule supplemental_figures:
+rule supplemental_figures_S1_S2:
     input:
         LST_COMBINED_HR_ALL_HR_LIKELIHOOD_PLOT,
         SIG_PLOT.format(covariates="BRCA1BRCA2RAD51C", method="stm", project="TCGA-BRCA", K=K)
+
+rule supplemental_figures_S3:
+    input:
+        SS_NUM_SIG_PLOT.format(project="TCGA-BRCA"),
 
 rule calculate_covariate_significance:
     input:
         COV_SIG_FILE.format(covariates="BRCA1BRCA2RAD51C", covariate_of_interest="BRCA1BRCA2RAD51C", cancer_type="BRCA", K=K)
 
-rule eval_HR_prediction:
+rule eval_HR_prediction_stm:
     input:
         expand(HELDOUT_PR_FILE, model="stm", covariate_of_interest="BRCA1BRCA2RAD51C", covariates="BRCA1BRCA2RAD51C", K=K, cancer_type="BRCA"),
         expand(HELDOUT_PR_FILE, model="stm", covariate_of_interest="BRCA1BRCA2RAD51C", covariates="NULL", K=K, cancer_type="BRCA"),
+
+rule eval_HR_prediction_SS:
+    input:
         expand(HELDOUT_PR_FILE, model="SS", covariate_of_interest="NULL", covariates="NULL", K=K, cancer_type="BRCA")
+
+
 
 rule eval_prediction_using_PR:
     input:
