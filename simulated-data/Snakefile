@@ -25,12 +25,17 @@ COSMIC_SIGNATURES = join(COSMIC_DIR, 'cosmic-signatures.tsv')
 # output of simulate_dmr_data
 DOC_FILE=join(OUTPUT_DIR, "{total_n_samples}_{iter_num}_documents.tsv")
 MODEL_FILE=join(OUTPUT_DIR, "{total_n_samples}_{iter_num}_model.npz")
-MUTATION_COUNT_MATRIX_FILE=join(OUTPUT_DIR, "{total_n_samples}_{iter_num}_mutation_count.tsv")
+MC_FILE=join(OUTPUT_DIR, "{total_n_samples}_{iter_num}_mutation_count.tsv")
 GT_SIGNATURES_FILE=join(OUTPUT_DIR, "{total_n_samples}_{iter_num}_signatures.tsv")
 GT_EXPOSURES_FILE=join(OUTPUT_DIR, "{total_n_samples}_{iter_num}_exposures.tsv")
 
 EXP_FEATURES_FILE=join(OUTPUT_DIR, "features-all_{n_samples}-{total_n_samples}-{iter_num}.tsv")
-EXP_MUTATION_COUNT_MATRIX_FILE=join(OUTPUT_DIR, "mutation-count-all_{n_samples}-{total_n_samples}-{iter_num}.tsv")
+TEST_FEATURE_FILE=join(OUTPUT_DIR, "features-test_{n_samples}-{total_n_samples}-{iter_num}_{fold}.tsv")
+TRAIN_FEATURE_FILE=join(OUTPUT_DIR, "features-train_{n_samples}-{total_n_samples}-{iter_num}_{fold}.tsv")
+EXP_MC_FILE=join(OUTPUT_DIR, "mutation-count-all_{n_samples}-{total_n_samples}-{iter_num}.tsv")
+TEST_MC_FILE=join(OUTPUT_DIR, "mutation-count-test_{n_samples}-{total_n_samples}-{iter_num}_{fold}.tsv")
+TRAIN_MC_FILE=join(OUTPUT_DIR, "mutation-count-train_{n_samples}-{total_n_samples}-{iter_num}_{fold}.tsv")
+
 EXP_GT_EXPOSURES_FILE=join(OUTPUT_DIR, "{n_samples}_{total_n_samples}_{iter_num}_exposures.tsv")
 
 EXP_EXPOSURES_FILE=join(OUTPUT_DIR, '{model}-all-count-exposures_{covariates}_{K}_{n_samples}-{total_n_samples}-{iter_num}.tsv')
@@ -41,11 +46,24 @@ MSE_PLOT=join(OUTPUT_DIR, "all_mse_{K}.pdf")
 COSINE_SIM=join(OUTPUT_DIR, '{model}-cosine-similarity_{covariates}_{K}_{n_samples}-{total_n_samples}-{iter_num}.tsv')
 COSINE_TABLE=join(OUTPUT_DIR, "cosine_{covariates}_{model}_{K}.tsv")
 COSINE_PLOT=join(OUTPUT_DIR, "all_cosine_{K}.pdf")
+
+# Heldout likelihood output files
+STM_HELDOUT_LIKELIHOOD_FILE=join(OUTPUT_DIR, 'stm-heldout-likelihood_{covariates}_{K}_{n_samples}-{total_n_samples}-{iter_num}_{fold}.tsv')
+STM_COMBINED_HELDOUT_LIKELIHOOD_FILE=join(OUTPUT_DIR, 'stm-combined-heldout_{covariates}_{n_samples}-{total_n_samples}-{iter_num}.tsv')
+LIKELIHOOD_PLOT=join(OUTPUT_DIR,'likelihood-plot_{covariates1}_{covariates2}_{n_samples}-{total_n_samples}-{iter_num}.pdf')
+
 # parameters
 seed = "123456"
 ACTIVE_SIGS= [1, 2, 3, 5]
 N_SAMPLES=range(50, 300, 50)
 ITER_RANGE=range(0,10)
+N_FOLDS=5
+FOLDS=range(0, N_FOLDS)
+min_K = 2
+max_K = 8
+K_RANGE=range(min_K, max_K+1)
+
+covariates=["feature1", "NULL"]
 
 rule all:
     input:
@@ -53,6 +71,37 @@ rule all:
         expand(COSINE_TABLE, covariates=["feature1", "NULL"], model="stm", K=4),
         # expand(COSINE_PLOT, K=4),
         expand(MSE_PLOT, K=4),
+        expand(STM_HELDOUT_LIKELIHOOD_FILE, K=4, n_samples=250, total_n_samples=250, iter_num=0, fold=0, covariates=covariates),
+        expand(TEST_MC_FILE, n_samples=250, total_n_samples=250, iter_num=0, fold=0),
+        expand(STM_COMBINED_HELDOUT_LIKELIHOOD_FILE, n_samples=250, total_n_samples=250, iter_num=0, covariates=covariates),
+        expand(LIKELIHOOD_PLOT, covariates1="feature1", covariates2="NULL", n_samples=250, total_n_samples=250, iter_num=0),
+
+
+rule combine_stm_heldout_likelihood_files:
+    input:
+        expand(STM_HELDOUT_LIKELIHOOD_FILE, K = K_RANGE, n_samples="{n_samples}",
+               total_n_samples="{total_n_samples}", iter_num="{iter_num}", fold=FOLDS, covariates="{covariates}")
+    output:
+        STM_COMBINED_HELDOUT_LIKELIHOOD_FILE
+    script:
+        "../src/combine_heldout_likelihood_files.py"
+
+rule split_test_training_data:
+    input:
+        EXP_MC_FILE,
+        EXP_FEATURES_FILE
+    params:
+        seed=seed,
+        n_folds=N_FOLDS,
+        feature="feature1"
+    output:
+        TEST_MC_FILE,
+        TRAIN_MC_FILE,
+        TEST_FEATURE_FILE,
+        TRAIN_FEATURE_FILE
+    script:
+        "../src/stratified_split_test_training_data.py"
+
 
 rule plot_stm_ctm_cosine_similarity:
     input:
@@ -110,11 +159,11 @@ rule calculate_differential_exposure:
 rule subsample_dmr_data:
     input:
         FEATURES_FILE,
-        MUTATION_COUNT_MATRIX_FILE,
+        MC_FILE,
         GT_EXPOSURES_FILE
     output:
         EXP_FEATURES_FILE,
-        EXP_MUTATION_COUNT_MATRIX_FILE,
+        EXP_MC_FILE,
         EXP_GT_EXPOSURES_FILE
     script:
         "src/subsample_dmr_data.py"
@@ -128,7 +177,7 @@ rule simulate_dmr_data:
     output:
         documents_file=DOC_FILE,
         model_file=MODEL_FILE,
-        matrix_file=MUTATION_COUNT_MATRIX_FILE,
+        matrix_file=MC_FILE,
         signature_file=GT_SIGNATURES_FILE,
         exposures_file=GT_EXPOSURES_FILE
     shell:
