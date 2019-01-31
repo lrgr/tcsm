@@ -25,7 +25,9 @@ run.stm <- function(mutation.count.file, feature.file, covariates, K, seed, expo
   write.table(effect.frame, file=snakemake@output[[3]], sep="\t")
   covariate.list <- strsplit(covariates, "\\+")[[1]]
   gamma <- stm1$mu$gamma
-  rownames(gamma) <- c("default", covariate.list)
+  if (covariates != "NULL"){
+    rownames(gamma) <- c("default", covariate.list)
+  }
   write.table(gamma, file=snakemake@output[[5]], sep="\t")
   write.table(stm1$sigma, file=snakemake@output[[4]], sep="\t")
   # plot.estimateEffect(prep)
