@@ -1,11 +1,11 @@
 from os.path import join
 
-include: "../Snakefile"
-
 wildcard_constraints:
     total_n_samples="\d+",
     n_samples="\d+",
     iter_num="\d+"
+
+include: "../Snakefile"
 
 # Directories
 COSMIC_DIR = 'COSMIC'
@@ -29,19 +29,83 @@ MUTATION_COUNT_MATRIX_FILE=join(OUTPUT_DIR, "{total_n_samples}_{iter_num}_mutati
 GT_SIGNATURES_FILE=join(OUTPUT_DIR, "{total_n_samples}_{iter_num}_signatures.tsv")
 GT_EXPOSURES_FILE=join(OUTPUT_DIR, "{total_n_samples}_{iter_num}_exposures.tsv")
 
-EXP_FEATURES_FILE=join(OUTPUT_DIR, "{n_samples}_{total_n_samples}_{iter_num}_features.tsv")
-EXP_MUTATION_COUNT_MATRIX_FILE=join(OUTPUT_DIR, "{n_samples}_{total_n_samples}_{iter_num}_mutation_count.tsv")
+EXP_FEATURES_FILE=join(OUTPUT_DIR, "features-all_{n_samples}-{total_n_samples}-{iter_num}.tsv")
+EXP_MUTATION_COUNT_MATRIX_FILE=join(OUTPUT_DIR, "mutation-count-all_{n_samples}-{total_n_samples}-{iter_num}.tsv")
 EXP_GT_EXPOSURES_FILE=join(OUTPUT_DIR, "{n_samples}_{total_n_samples}_{iter_num}_exposures.tsv")
 
+EXP_EXPOSURES_FILE=join(OUTPUT_DIR, '{model}-all-count-exposures_{covariates}_{K}_{n_samples}-{total_n_samples}-{iter_num}.tsv')
+EXP_SIGNATURES_FILE=join(OUTPUT_DIR, '{model}-exome-signatures_{covariates}_{K}_{n_samples}-{total_n_samples}-{iter_num}.tsv')
+DIFFERENTIAL_EXPOSURE_FILE=join(OUTPUT_DIR, '{model}-differential-exposures_{covariates}_{K}_{n_samples}-{total_n_samples}-{iter_num}.tsv')
+MSE_TABLE=join(OUTPUT_DIR, "mse_{model}_{covariates}_{K}.tsv")
+MSE_PLOT=join(OUTPUT_DIR, "all_mse_{K}.pdf")
+COSINE_SIM=join(OUTPUT_DIR, '{model}-cosine-similarity_{covariates}_{K}_{n_samples}-{total_n_samples}-{iter_num}.tsv')
+COSINE_TABLE=join(OUTPUT_DIR, "cosine_{covariates}_{model}_{K}.tsv")
+COSINE_PLOT=join(OUTPUT_DIR, "all_cosine_{K}.pdf")
 # parameters
 seed = "123456"
 ACTIVE_SIGS= [1, 2, 3, 5]
+N_SAMPLES=range(50, 300, 50)
+ITER_RANGE=range(0,10)
 
 rule all:
     input:
-        expand(EXP_FEATURES_FILE, total_n_samples=250, iter_num=0, n_samples=50),
-        expand(EXP_MUTATION_COUNT_MATRIX_FILE, total_n_samples=250, iter_num=0, n_samples=50),
-        expand(EXP_GT_EXPOSURES_FILE, total_n_samples=250, iter_num=0, n_samples=50),
+        # expand(COSINE_SIM, K=4, model="stm", covariates="feature1", n_samples=250, total_n_samples=250, iter_num=0),
+        expand(COSINE_TABLE, covariates=["feature1", "NULL"], model="stm", K=4),
+        # expand(COSINE_PLOT, K=4),
+        expand(MSE_PLOT, K=4),
+
+rule plot_stm_ctm_cosine_similarity:
+    input:
+        expand(COSINE_TABLE, model=["stm"], covariates=["feature1", "NULL"], K="{K}")
+    output:
+        COSINE_PLOT
+    script:
+        "src/plot_all_cosine_similarity.py"
+
+rule combine_cosine_similarity:
+    input:
+        expand(COSINE_SIM, K="{K}", n_samples=N_SAMPLES, total_n_samples=N_SAMPLES[-1], iter_num=ITER_RANGE, model="{model}", covariates="{covariates}")
+    output:
+        COSINE_TABLE
+    script:
+        "src/combine_cosine_similarities.py"
+
+rule cosine_similarity:
+    input:
+        EXP_SIGNATURES_FILE,
+        GT_SIGNATURES_FILE
+    output:
+        COSINE_SIM
+    script:
+        "src/compare_signatures.py"
+
+rule plot_mse:
+    input:
+        expand(MSE_TABLE, K="{K}", covariates=["feature1", "NULL"], model="stm")
+    output:
+        MSE_PLOT
+    script:
+        "src/plot_all_mse.py"
+
+rule combine_exposures_mse:
+    input:
+        expand(DIFFERENTIAL_EXPOSURE_FILE, K="{K}", n_samples=N_SAMPLES, total_n_samples=N_SAMPLES[-1], iter_num=ITER_RANGE, model="{model}", covariates="{covariates}")
+    output:
+        MSE_TABLE
+    script:
+        "src/combine_mse.py"
+
+rule calculate_differential_exposure:
+    input:
+        EXP_EXPOSURES_FILE,
+        EXP_SIGNATURES_FILE,
+        GT_SIGNATURES_FILE,
+        EXP_GT_EXPOSURES_FILE
+    output:
+        DIFFERENTIAL_EXPOSURE_FILE
+    script:
+        "src/calculate_exposure_difference.py"
+
 
 rule subsample_dmr_data:
     input:
