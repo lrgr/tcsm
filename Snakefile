@@ -27,7 +27,7 @@ STM_ALL_NORMALIZED_EXPOSURES_FILE=join(OUTPUT_DIR, 'stm-all-normalized-exposures
 STM_TEST_NORMALIZED_EXPOSURES_FILE=join(OUTPUT_DIR, 'stm-test-normalized-exposures_{covariate_of_interest}_{covariates}_{K}_{project}.tsv')
 STM_TRAIN_NORMALIZED_EXPOSURES_FILE=join(OUTPUT_DIR, 'stm-train-normalized-exposures_{covariate_of_interest}_{covariates}_{K}_{project}.tsv')
 STM_TRAIN_SIGNATURES_FILE=join(OUTPUT_DIR, 'stm-train-signatures_{covariate_of_interest}_{covariates}_{K}_{project}.tsv')
-# STM_ALL_COUNT_EXPOSURES_FILE=join(OUTPUT_DIR, 'stm-all-count-exposures_{covariate_of_interest}_{covariates}_{K}_{project}.tsv')
+STM_ALL_COUNT_EXPOSURES_FILE=join(OUTPUT_DIR, 'stm-all-count-exposures_{covariates}_{K}_{project}.tsv')
 STM_TEST_COUNT_EXPOSURES_FILE=join(OUTPUT_DIR, 'stm-test-count-exposures_{covariate_of_interest}_{covariates}_{K}_{project}.tsv')
 STM_TRAIN_COUNT_EXPOSURES_FILE=join(OUTPUT_DIR, 'stm-train-count-exposures_{covariates}_{K}_{project}.tsv')
 
@@ -46,6 +46,15 @@ GAMMA_FILE=join(OUTPUT_DIR, 'stm-gamma_{covariates}_{K}_{project}.tsv')
 
 # Parameters
 seed="123456"
+
+rule convert_normalized_exposures_to_counts:
+    input:
+        STM_ALL_NORMALIZED_EXPOSURES_FILE,
+        ALL_MC_FILE
+    output:
+        STM_ALL_COUNT_EXPOSURES_FILE
+    script:
+        "src/convert_normalized_to_count_exposures.py"
 
 rule plot_likelihoods:
     input:
