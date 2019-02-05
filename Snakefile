@@ -20,8 +20,6 @@ TRAIN_MC_FILE=join(OUTPUT_DIR, "mutation-count-train_{project}.tsv")
 TRAIN_FEATURE_FILE=join(OUTPUT_DIR, "features-train_{project}.tsv")
 TEST_MC_FILE=join(OUTPUT_DIR, "mutation-count-test_{project}.tsv")
 TEST_FEATURE_FILE=join(OUTPUT_DIR, "features-test_{project}.tsv")
-EXOME_TRINUCLEOTIDE_COUNTS = join(dirname(srcdir("Snakefile")), "exome_trinucleotide_counts.tsv")
-GENOME_TRINUCLEOTIDE_COUNTS = join(dirname(srcdir("Snakefile")), "genome_trinucleotide_counts.tsv")
 
 # Output files
 # Exposures and Signatures
@@ -34,7 +32,7 @@ STM_TEST_COUNT_EXPOSURES_FILE=join(OUTPUT_DIR, 'stm-test-count-exposures_{covari
 STM_TRAIN_COUNT_EXPOSURES_FILE=join(OUTPUT_DIR, 'stm-train-count-exposures_{covariates}_{K}_{project}.tsv')
 
 STM_EXOME_SIGNATURES_FILE=join(OUTPUT_DIR, 'stm-exome-signatures_{covariates}_{K}_{project}.tsv')
-STM_GENOME_SIGNATURES_FILE=join(OUTPUT_DIR, 'stm-genome-signatures_{covariates}_{K}_{project}.tsv')
+
 # Likelihood files
 STM_HELDOUT_LIKELIHOOD_FILE=join(OUTPUT_DIR, 'stm-heldout-likelihood_{covariates}_{K}_{project}.tsv')
 STM_EFFECT_TABLE=join(OUTPUT_DIR, 'stm-effect-table_{covariates}_{K}_{project}.tsv')
@@ -88,7 +86,6 @@ rule stm_heldout_likelihood_ratio:
     script:
         "src/stm_heldout_likelihood_ratio.R"
 
-
 rule run_stm:
     params:
         seed
@@ -104,7 +101,7 @@ rule run_stm:
     script:
         "src/run_stm.R"
 
-# calculate the likelihood of test samples after learning the model on train samples 
+# calculate the likelihood of test samples after learning the model on train samples
 rule stm_heldout_likelihood:
     params:
         seed,

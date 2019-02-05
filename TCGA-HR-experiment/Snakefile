@@ -41,7 +41,6 @@ STM_ALL_NORMALIZED_EXPOSURES_FILE=join(OUTPUT_DIR, 'stm-all-normalized-exposures
 STM_HELDOUT_LIKELIHOOD_RATIO_FILE=join(OUTPUT_DIR, 'stm-heldout-ratio_{covariate_of_interest}_{covariates}_{K}_TCGA-{cancer_type}_{fold}.tsv')
 STM_EXOME_SIGNATURES_FILE=join(OUTPUT_DIR, 'stm-exome-signatures_{covariates}_{K}_TCGA-{cancer_type}.tsv')
 HELDOUT_PR_FILE=join(OUTPUT_DIR, 'linear-svm-heldout-pr_normalized_{model}_{covariate_of_interest}_{covariates}_{K}_TCGA-{cancer_type}.tsv')
-
 # Plot Files
 LIKELIHOOD_PLOT=join(OUTPUT_DIR,'likelihood-plot_{covariates1}_{covariates2}_TCGA-{cancer_type}.pdf')
 LST_PLOT=join(OUTPUT_DIR, "lst-scatterplot_{covariate_of_interest}_{covariates}_{K}_TCGA-{cancer_type}.pdf")
@@ -53,6 +52,16 @@ LST_COMBINED_HR_ALL_HR_LIKELIHOOD_PLOT=join(OUTPUT_DIR,'likelihood-plot_LST-comb
 SIGMA_FILE=join(OUTPUT_DIR, 'stm-sigma_{covariates}_{K}_TCGA-{cancer_type}.tsv')
 GAMMA_FILE=join(OUTPUT_DIR, 'stm-gamma_{covariates}_{K}_TCGA-{cancer_type}.tsv')
 COV_SIG_FILE=join(OUTPUT_DIR, 'stm-covariate-significance_{covariate_of_interest}_{covariates}_{K}_TCGA-{cancer_type}.tsv')
+
+# Shuffled files
+SHUFFLED_STM_EXOME_SIGNATURES_FILE=join(OUTPUT_DIR, 'stm-exome-signatures_{covariates}_{K}_TCGA-{cancer_type}_{iter_num}.tsv')
+SHUFFLED_MC_FILE=join(OUTPUT_DIR, "mutation-count-all_TCGA-{cancer_type}_{iter_num}.tsv")
+SHUFFLED_FEATURE_FILE=join(OUTPUT_DIR, "features-all_TCGA-{cancer_type}_{iter_num}.tsv")
+SHUFFLED_SIGMA_FILE=join(OUTPUT_DIR, 'stm-sigma_{covariates}_{K}_TCGA-{cancer_type}_{iter_num}.tsv')
+SHUFFLED_GAMMA_FILE=join(OUTPUT_DIR, 'stm-gamma_{covariates}_{K}_TCGA-{cancer_type}_{iter_num}.tsv')
+SHUFFLED_COV_SIG_FILE=join(OUTPUT_DIR, 'stm-covariate-significance_{covariate_of_interest}_{covariates}_{K}_TCGA-{cancer_type}_{iter_num}.tsv')
+EMP_COV_SIG_FILE=join(OUTPUT_DIR, 'stm-empirical-covariate-significance_{covariate_of_interest}_{covariates}_{K}_TCGA-{cancer_type}.tsv')
+
 seed="123456"
 
 N_FOLDS=5
@@ -63,13 +72,18 @@ MAX_K=10
 K_RANGE=range(MIN_K, MAX_K+1)
 K=5
 
+rule all:
+    input:
+        expand(SHUFFLED_STM_EXOME_SIGNATURES_FILE, cancer_type="BRCA", iter_num=range(0,5), covariates="BRCA1BRCA2RAD51C", K=K)
+
 # Rules to generate figures in the paper
 rule figure_2:
     input:
         # LIKELIHOOD_PLOT.format(covariates1="BRCA1BRCA2RAD51C", covariates2="NULL", cancer_type="BRCA"),
         #SIG_COSINE_PLOT.format(covariates="BRCA1BRCA2RAD51C", method="stm", K=K, project="TCGA-BRCA"),
-        STM_BOXPLOT.format(covariates="BRCA1BRCA2RAD51C+nMuts", covariate_of_interest="BRCA1BRCA2RAD51C", cancer_type="BRCA", K=K),
+        STM_BOXPLOT.format(covariates="BRCA1BRCA2RAD51C*nMuts", covariate_of_interest="BRCA1BRCA2RAD51C", cancer_type="BRCA", K=K),
         #LST_PLOT.format(covariates="BRCA1BRCA2RAD51C", covariate_of_interest="BRCA1BRCA2RAD51C", cancer_type="BRCA", K=K)
+
 
 rule supplemental_figures_S1_S2:
     input:
@@ -82,7 +96,7 @@ rule supplemental_figures_S3:
 
 rule calculate_covariate_significance:
     input:
-        COV_SIG_FILE.format(covariates="BRCA1BRCA2RAD51C", covariate_of_interest="BRCA1BRCA2RAD51C", cancer_type="BRCA", K=K)
+        EMP_COV_SIG_FILE.format(covariates="BRCA1BRCA2RAD51C", covariate_of_interest="BRCA1BRCA2RAD51C", cancer_type="BRCA", K=K)
 
 rule eval_HR_prediction_stm:
     input:
@@ -92,7 +106,6 @@ rule eval_HR_prediction_stm:
 rule eval_HR_prediction_SS:
     input:
         expand(HELDOUT_PR_FILE, model="SS", covariate_of_interest="NULL", covariates="NULL", K=K, cancer_type="BRCA")
-
 
 
 rule eval_prediction_using_PR:
@@ -105,6 +118,41 @@ rule eval_prediction_using_PR:
         HELDOUT_PR_FILE
     script:
         "src/run_LinearSVC_PR.py"
+
+rule covariate_empirical_significance:
+    input:
+        COV_SIG_FILE.format(covariates="{covariates}", covariate_of_interest="{covariate_of_interest}", cancer_type="{cancer_type}", K="{K}"),
+        expand(SHUFFLED_COV_SIG_FILE, covariates="{covariates}", covariate_of_interest="{covariate_of_interest}", cancer_type="{cancer_type}", K="{K}", iter_num=range(0,100)),
+    output:
+        EMP_COV_SIG_FILE#.format(covariates="BRCA1BRCA2RAD51C", covariate_of_interest="BRCA1BRCA2RAD51C", cancer_type="BRCA", K=K)
+    script:
+        "../src/calculate_empirical_covariate_significance.py"
+
+
+rule shuffle_covariates:
+    params:
+        seed=seed
+    input:
+        MC_FILE,
+        FEATURE_FILE,
+    output:
+        SHUFFLED_MC_FILE,
+        SHUFFLED_FEATURE_FILE
+    script:
+        "../src/shuffle_covariates.py"
+
+
+rule shuffled_covariate_significance:
+    input:
+        SHUFFLED_SIGMA_FILE,
+        SHUFFLED_GAMMA_FILE,
+        SHUFFLED_FEATURE_FILE
+    params:
+        seed=seed
+    output:
+        SHUFFLED_COV_SIG_FILE
+    script:
+        "../src/simulate_logistic_normal.py"
 
 rule covariate_significance:
     input:
