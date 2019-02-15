@@ -23,8 +23,14 @@ DDR_SILENCING_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_Silencing_Knijnenburg201
 CLINICAL_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_clinical.tsv")
 
 # Input files
+ALL_MUTATION_COUNT_MATRIX_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_all_mutation_count.tsv")
+ALL_FEATURE_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_all_clinical_features.tsv")
+
 MC_FILE=join(OUTPUT_DIR, "mutation-count-all_TCGA-{cancer_type}.tsv")
 FEATURE_FILE=join(OUTPUT_DIR, "features-all_TCGA-{cancer_type}.tsv")
+
+VALIDATE_FEATURE_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_features_validate.tsv")
+VALIDATE_MC_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_mutation_count_validate.tsv")
 
 TEST_FEATURE_FILE=join(OUTPUT_DIR, "features-test_TCGA-{cancer_type}_{fold}.tsv")
 TEST_MC_FILE=join(OUTPUT_DIR, "mutation-count-test_TCGA-{cancer_type}_{fold}.tsv")
@@ -229,6 +235,20 @@ rule split_test_training_data:
     script:
         "../src/stratified_split_test_training_data.py"
 
+rule split_validate_training:
+    input:
+        ALL_MUTATION_COUNT_MATRIX_FILE,
+        ALL_FEATURE_FILE
+    params:
+        seed=seed,
+        feature="HR Status"
+    output:
+        VALIDATE_MC_FILE,
+        MC_FILE,
+        VALIDATE_FEATURE_FILE,
+        FEATURE_FILE
+    script:
+        "../src/stratified_split_training_validate_data.py"
 
 rule clean_feature_mutation_count:
     params:
@@ -241,7 +261,7 @@ rule clean_feature_mutation_count:
         dataworkflow(HR_FEATURE_FILE),
         dataworkflow(CLINICAL_FILE),
     output:
-        MC_FILE,
-        FEATURE_FILE
+        ALL_MUTATION_COUNT_MATRIX_FILE,
+        ALL_FEATURE_FILE
     script:
         "src/clean_feature_mutation_count.py"
