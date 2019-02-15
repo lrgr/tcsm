@@ -77,23 +77,25 @@ rule stm_heldout_exposures:
     output:
         STM_TRAIN_NORMALIZED_EXPOSURES_FILE,
         STM_TEST_NORMALIZED_EXPOSURES_FILE,
-        STM_TRAIN_SIGNATURES_FILE
+        STM_TRAIN_SIGNATURES_FILE,
+        STM_HELDOUT_LIKELIHOOD_RATIO_FILE,
     script:
         "src/stm_heldout_exposures.R"
 
-rule stm_heldout_likelihood_ratio:
-    params:
-        seed,
-        FUNCTION_FILE
-    input:
-        TRAIN_MC_FILE,
-        TEST_MC_FILE,
-        TRAIN_FEATURE_FILE,
-        TEST_FEATURE_FILE
-    output:
-        STM_HELDOUT_LIKELIHOOD_RATIO_FILE
-    script:
-        "src/stm_heldout_likelihood_ratio.R"
+# rule stm_heldout_likelihood_ratio:
+#     params:
+#         seed,
+#         FUNCTION_FILE
+#     input:
+#         TRAIN_MC_FILE,
+#         TEST_MC_FILE,
+#         TRAIN_FEATURE_FILE,
+#         TEST_FEATURE_FILE
+#     output:
+#         STM_HELDOUT_LIKELIHOOD_RATIO_FILE,
+#         STM_EXOME_SIGNATURES_FILE
+#     script:
+#         "src/stm_heldout_likelihood_ratio.R"
 
 rule run_stm:
     params:
