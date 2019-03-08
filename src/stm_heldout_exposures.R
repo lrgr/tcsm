@@ -2,7 +2,7 @@ library(stm)
 source(snakemake@params[[2]])
 
 
-run.stm <- function(train.mutation.count.file, test.mutation.count.file, train.feature.file, test.feature.file, covariates, K, seed, train.exposures.file, test.exposures.file, signature.output.file, covariate_of_interest){
+run.stm <- function(train.mutation.count.file, test.mutation.count.file, train.feature.file, test.feature.file, covariates, K, seed, train.exposures.file, test.exposures.file, signature.output.file, covariate_of_interest, heldout.ratio.file){
   # run the model on just the training data
   train.prep <- load.stm.documents(train.mutation.count.file)
   train.feature.data <- read.delim(train.feature.file, sep = '\t', header = TRUE, row.names=1)
@@ -12,20 +12,22 @@ run.stm <- function(train.mutation.count.file, test.mutation.count.file, train.f
               init.type = "Spectral")
   # use fitNewDocuments with the test data and the predicted feature.data
   test.prep <- load.stm.documents(test.mutation.count.file)
-  #print(test.prep$documents)
-  #print(predicted.feature.data)
-  #print(train.feature.data)
   test.feature.data <- read.delim(test.feature.file, sep = '\t', header = TRUE, row.names=1)
-  heldout <- make.heldout.obj(train.mutation.count.file, test.mutation.count.file)
+  heldout <- make.heldout.obj(train.mutation.count.file, test.mutation.count.file, proportion=0)
   if (covariates != "NULL"){
     heldout.ratio <- get.heldout.ratio(train.feature.file, test.feature.file, heldout, K, seed, covariates, covariate_of_interest)
+    df <- data.frame("heldout.ratio"=heldout.ratio)
     predicted.feature.data <- as.integer(heldout.ratio > 0)
     test.feature.data[covariates] <- predicted.feature.data
+  } else {
+    df <- data.frame(matrix(NA, nrow=nrow(test.feature.data), ncol=1))
   }
+  df <- cbind(test.feature.data, df)
+  write.table(df, heldout.ratio.file, sep="\t")
   test.results <- fitNewDocuments(model=stm1, documents=test.prep$documents, newData=test.feature.data,
                   origData=train.feature.data, prevalence=covariate.formula)
   test.exposures <- as.data.frame(test.results$theta)
-  print(test.exposures)
+  # print(test.exposures)
   # get the training exposure results
   train.exposures <- make.dt(stm1)
   train.exposures <- subset(train.exposures, select = -c(docnum))
@@ -61,10 +63,11 @@ K <- strtoi(snakemake@wildcards[["K"]])
 train.exposures.file <- snakemake@output[[1]]
 test.exposures.file <- snakemake@output[[2]]
 signatures.file <- snakemake@output[[3]]
+heldout.ratio.file <- snakemake@output[[4]]
 covariates <- snakemake@wildcards[["covariates"]]
 covariate_of_interest <- snakemake@wildcards[["covariate_of_interest"]]
 
 
 run.stm(train.mutation.count.file, test.mutation.count.file, train.feature.file,
         test.feature.file, covariates, K, seed, train.exposures.file,
-        test.exposures.file, signatures.file, covariate_of_interest)
+        test.exposures.file, signatures.file, covariate_of_interest, heldout.ratio.file)

@@ -35,38 +35,38 @@ if __name__ == '__main__':
         default_exposures = simulate_logistic_normal(mean, cov, n_draws)
         mean = gamma_df.loc["default"].values + gamma_df.loc[covariate_of_interest].values
         covariate_exposures = simulate_logistic_normal(mean, cov, n_draws)
-    else:
-        print(feature_df[other_covariates])
-        default_features = feature_df.loc[feature_df[covariate_of_interest] == 0][other_covariates]
-        # sample the feature with replacement n_draws times
-        sampled_features = default_features.sample(n=n_draws, replace=True)
-        mean = gamma_df.loc["default"].values
-        print(mean)
-        for cov in other_covariates:
-            mean = mean + np.outer(sampled_features[cov].values, gamma_df.loc[cov].values)
-            print(mean)
-        # now we have the mean, draw from the logistic normal distribution
-        output = []
-        for m in mean:
-            output.append(simulate_logistic_normal(mean=m, cov=sigma_df.values, n_draws=1))
-        default_exposures = pd.concat(output)
-        print(default_exposures)
-        # for each row, calculate the mean and draw from the logistic normal
-        covariate_features = feature_df.loc[feature_df[covariate_of_interest] == 1][other_covariates]
-        # sample the feature with replacement n_draws times
-        sampled_features = covariate_features.sample(n=n_draws, replace=True)
-        mean = gamma_df.loc["default"].values + gamma_df.loc[covariate_of_interest].values
-        print(mean)
-        for cov in other_covariates:
-            mean = mean + np.outer(sampled_features[cov].values, gamma_df.loc[cov].values)
-            print(mean)
-        output = []
-        for m in mean:
-            output.append(simulate_logistic_normal(mean=m, cov=sigma_df.values, n_draws=1))
-        covariate_exposures = pd.concat(output)
-        print(covariate_exposures)
+    # else:
+    #     print(feature_df[other_covariates])
+    #     default_features = feature_df.loc[feature_df[covariate_of_interest] == 0][other_covariates]
+    #     # sample the feature with replacement n_draws times
+    #     sampled_features = default_features.sample(n=n_draws, replace=True)
+    #     mean = gamma_df.loc["default"].values
+    #     print(mean)
+    #     for cov in other_covariates:
+    #         mean = mean + np.outer(sampled_features[cov].values, gamma_df.loc[cov].values)
+    #         print(mean)
+    #     # now we have the mean, draw from the logistic normal distribution
+    #     output = []
+    #     for m in mean:
+    #         output.append(simulate_logistic_normal(mean=m, cov=sigma_df.values, n_draws=1))
+    #     default_exposures = pd.concat(output)
+    #     print(default_exposures)
+    #     # for each row, calculate the mean and draw from the logistic normal
+    #     covariate_features = feature_df.loc[feature_df[covariate_of_interest] == 1][other_covariates]
+    #     # sample the feature with replacement n_draws times
+    #     sampled_features = covariate_features.sample(n=n_draws, replace=True)
+    #     mean = gamma_df.loc["default"].values + gamma_df.loc[covariate_of_interest].values
+    #     print(mean)
+    #     for cov in other_covariates:
+    #         mean = mean + np.outer(sampled_features[cov].values, gamma_df.loc[cov].values)
+    #         print(mean)
+    #     output = []
+    #     for m in mean:
+    #         output.append(simulate_logistic_normal(mean=m, cov=sigma_df.values, n_draws=1))
+    #     covariate_exposures = pd.concat(output)
+    #     print(covariate_exposures)
     print(np.size(mean, axis=0))
-    topics = ["Topic{}".format(i) for i in range(1, np.size(mean, axis=1)+2)]
+    topics = ["Topic{}".format(i) for i in range(1, np.size(mean, axis=0)+2)]
     output = []
     for topic in topics:
         ranksum_result = mannwhitneyu(x=covariate_exposures[topic], y=default_exposures[topic], alternative='greater')

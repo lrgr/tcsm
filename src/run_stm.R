@@ -17,7 +17,7 @@ run.stm <- function(mutation.count.file, feature.file, covariates, K, seed, expo
   effect.summary <- summary(effect)
   print(effect.summary)
   tc <- topicCorr(stm1, method="simple")
-  print(tc)
+  # print(tc)
   # plot.topicCorr(tc)
   effect.tables <- effect.summary$tables
   results <- lapply(effect.summary$tables, function(x) x[, "Estimate"])
