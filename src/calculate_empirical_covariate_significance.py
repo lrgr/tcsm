@@ -1,5 +1,6 @@
 import pandas as pd
 from statsmodels.distributions.empirical_distribution import ECDF
+from statsmodels.stats.multitest import multipletests
 
 if __name__ == '__main__':
     cov_sig = pd.read_csv(snakemake.input[0], sep="\t", index_col=0)
@@ -12,5 +13,8 @@ if __name__ == '__main__':
     output = []
     for topic in df.index:
         cdf = ECDF(df.loc[topic])
-        output.append(cdf(cov_sig.loc[topic]))
-    pd.Series(index=df.index, data=output).to_csv(snakemake.output[0], sep="\t")
+        output.append(1-cdf(cov_sig.loc[topic]))
+    print(output)
+    corrected_pvalue = multipletests(output, method="fdr_bh")[1]
+    print(corrected_pvalue)
+    pd.Series(index=df.index, data=corrected_pvalue).to_csv(snakemake.output[0], sep="\t")
