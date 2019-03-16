@@ -145,9 +145,9 @@ rule eval_prediction_using_PR:
 rule covariate_empirical_significance:
     input:
         COV_SIG_FILE.format(covariates="{covariates}", covariate_of_interest="{covariate_of_interest}", cancer_type="{cancer_type}", K="{K}"),
-        expand(SHUFFLED_COV_SIG_FILE, covariates="{covariates}", covariate_of_interest="{covariate_of_interest}", cancer_type="{cancer_type}", K="{K}", iter_num=range(0,100)),
+        expand(SHUFFLED_COV_SIG_FILE, covariates="{covariates}", covariate_of_interest="{covariate_of_interest}", cancer_type="{cancer_type}", K="{K}", iter_num=range(0,1000)),
     output:
-        EMP_COV_SIG_FILE#.format(covariates="BRCA1BRCA2RAD51C", covariate_of_interest="BRCA1BRCA2RAD51C", cancer_type="BRCA", K=K)
+        EMP_COV_SIG_FILE
     script:
         "../src/calculate_empirical_covariate_significance.py"
 
