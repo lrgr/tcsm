@@ -59,8 +59,8 @@ seed="123456"
 N_FOLDS=5
 FOLDS=range(0, N_FOLDS)
 
-all_covariates="SKCM+LUSC+Smoker+DNPs"
-cancertype_covariates="SKCM+LUSC"
+all_covariates="CancerType+Smoker+DNPs"
+cancertype_covariates="CancerType"
 CANCER_TYPES=["SKCM", "LUSC"]
 MIN_K=2
 MAX_K=10
@@ -122,6 +122,7 @@ rule ratio_dnp_scatter_plot:
     script:
         "src/plot_ratio_dnp.py"
 
+# this plot shows that using one variable vs two variables for cancer type results in the same heldout log-likelihood
 rule plot_likelihood_cancertype_LUSC_SKCM:
     input:
         expand(STM_COMBINED_HELDOUT_LIKELIHOOD_FILE, covariates=["LUSC+SKCM", "CancerType"], cancer_type="LUSCSKCM")
