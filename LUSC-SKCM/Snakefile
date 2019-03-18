@@ -11,6 +11,9 @@ OUTPUT_DIR = 'processed'
 RAW_DIR = 'raw'
 DATA_DIR = 'data'
 
+wildcard_constraints:
+    cancer_type="LUSCSKCM"
+
 # Files from TCGA-data subworkflow
 CLINICAL_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_clinical.tsv")
 LST_FEATURE_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_LST_feature.tsv")
@@ -54,6 +57,16 @@ CANCERTYPE_LUSC_SKCM_LIKELIHOOD_PLOT=join(OUTPUT_DIR,'likelihood-plot_cancertype
 SIGMA_FILE=join(OUTPUT_DIR, 'stm-sigma_{covariates}_{K}_TCGA-{cancer_type}.tsv')
 GAMMA_FILE=join(OUTPUT_DIR, 'stm-gamma_{covariates}_{K}_TCGA-{cancer_type}.tsv')
 COV_SIG_FILE=join(OUTPUT_DIR, 'stm-covariate-significance_{covariate_of_interest}_{covariates}_{K}_TCGA-{cancer_type}.tsv')
+
+# Shuffled files
+SHUFFLED_STM_EXOME_SIGNATURES_FILE=join(OUTPUT_DIR, 'stm-exome-signatures_{covariates}_{K}_TCGA-{cancer_type}_{iter_num}.tsv')
+SHUFFLED_MC_FILE=join(OUTPUT_DIR, "mutation-count-all_TCGA-{cancer_type}_{iter_num}.tsv")
+SHUFFLED_FEATURE_FILE=join(OUTPUT_DIR, "features-all_TCGA-{cancer_type}_{iter_num}.tsv")
+SHUFFLED_SIGMA_FILE=join(OUTPUT_DIR, 'stm-sigma_{covariates}_{K}_TCGA-{cancer_type}_{iter_num}.tsv')
+SHUFFLED_GAMMA_FILE=join(OUTPUT_DIR, 'stm-gamma_{covariates}_{K}_TCGA-{cancer_type}_{iter_num}.tsv')
+SHUFFLED_COV_SIG_FILE=join(OUTPUT_DIR, 'stm-covariate-significance_{covariate_of_interest}_{covariates}_{K}_TCGA-{cancer_type}_{iter_num}.tsv')
+EMP_COV_SIG_FILE=join(OUTPUT_DIR, 'stm-empirical-covariate-significance_{covariate_of_interest}_{covariates}_{K}_TCGA-{cancer_type}.tsv')
+
 # Parameters
 seed="123456"
 N_FOLDS=5
@@ -81,8 +94,42 @@ rule supplemental_figures:
 
 rule calculate_covariate_significance:
     input:
-        COV_SIG_FILE.format(covariates="LUSC+SKCM", covariate_of_interest="LUSC", cancer_type="LUSCSKCM", K=K),
-        COV_SIG_FILE.format(covariates="LUSC+SKCM", covariate_of_interest="SKCM", cancer_type="LUSCSKCM", K=K)
+        EMP_COV_SIG_FILE.format(covariates="CancerType", covariate_of_interest="CancerType", cancer_type="LUSCSKCM", K=K)
+
+rule covariate_empirical_significance:
+    input:
+        COV_SIG_FILE.format(covariates="{covariates}", covariate_of_interest="{covariate_of_interest}", cancer_type="{cancer_type}", K="{K}"),
+        expand(SHUFFLED_COV_SIG_FILE, covariates="{covariates}", covariate_of_interest="{covariate_of_interest}", cancer_type="{cancer_type}", K="{K}", iter_num=range(0,1000)),
+    output:
+        EMP_COV_SIG_FILE
+    script:
+        "../src/calculate_empirical_covariate_significance.py"
+
+
+rule shuffle_covariates:
+    params:
+        seed=seed
+    input:
+        MC_FILE,
+        FEATURE_FILE,
+    output:
+        SHUFFLED_MC_FILE,
+        SHUFFLED_FEATURE_FILE
+    script:
+        "../src/shuffle_covariates.py"
+
+
+rule shuffled_covariate_significance:
+    input:
+        SHUFFLED_SIGMA_FILE,
+        SHUFFLED_GAMMA_FILE,
+        SHUFFLED_FEATURE_FILE
+    params:
+        seed=seed
+    output:
+        SHUFFLED_COV_SIG_FILE
+    script:
+        "../src/estimate_significance.py"
 
 
 rule covariate_significance:
@@ -95,7 +142,8 @@ rule covariate_significance:
     output:
         COV_SIG_FILE
     script:
-        "../src/simulate_logistic_normal.py"
+        "../src/estimate_significance.py"
+
 
 rule combine_heldout_ratio_files:
     input:
