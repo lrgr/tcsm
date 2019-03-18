@@ -3,7 +3,7 @@ source(snakemake@params[[2]])
 
 
 run.stm <- function(train.mutation.count.file, test.mutation.count.file, train.feature.file, test.feature.file, covariates, K, seed, heldout.performance.file){
-  heldout <- make.heldout.obj(train.mutation.count.file, test.mutation.count.file, seed=seed)
+  heldout <- make.heldout.obj(train.mutation.count.file, test.mutation.count.file)
   train.feature.data <- read.delim(train.feature.file, sep = '\t', header = TRUE, row.names=1)
   test.feature.data <- read.delim(test.feature.file, sep = '\t', header = TRUE, row.names=1)
   feature.data <- rbind(train.feature.data, test.feature.data)

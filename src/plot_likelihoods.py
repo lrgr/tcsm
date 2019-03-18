@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns; sns.set_style('whitegrid')
 from matplotlib import rcParams
 rcParams.update({'figure.autolayout': True})
-matplotlib.rc('text', usetex = True)
+#matplotlib.rc('text', usetex = True)
 
 
 if __name__ == '__main__':

@@ -13,7 +13,7 @@ run.stm <- function(train.mutation.count.file, test.mutation.count.file, train.f
   # use fitNewDocuments with the test data and the predicted feature.data
   test.prep <- load.stm.documents(test.mutation.count.file)
   test.feature.data <- read.delim(test.feature.file, sep = '\t', header = TRUE, row.names=1)
-  heldout <- make.heldout.obj(train.mutation.count.file, test.mutation.count.file, proportion=0)
+  heldout <- make.heldout.obj(train.mutation.count.file, test.mutation.count.file)
   if (covariates != "NULL"){
     heldout.ratio <- get.heldout.ratio(train.feature.file, test.feature.file, heldout, K, seed, covariates, covariate_of_interest)
     df <- data.frame("heldout.ratio"=heldout.ratio)

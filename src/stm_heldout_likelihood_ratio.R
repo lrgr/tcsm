@@ -3,7 +3,7 @@ source(snakemake@params[[2]])
 
 
 run.stm <- function(train.mutation.count.file, test.mutation.count.file, train.feature.file, test.feature.file, covariates, K, seed, heldout.performance.file, covariate_of_interest){
-  heldout <- make.heldout.obj(train.mutation.count.file, test.mutation.count.file, proportion=0, seed=seed)
+  heldout <- make.heldout.obj(train.mutation.count.file, test.mutation.count.file)
   heldout.ratio <- get.heldout.ratio(train.feature.file, test.feature.file, heldout, K, seed, covariates, covariate_of_interest)
   test.feature.data <- read.delim(test.feature.file, sep = '\t', header = TRUE, row.names=1)
   df <- data.frame("heldout.ratio"=heldout.ratio)
