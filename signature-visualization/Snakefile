@@ -17,7 +17,7 @@ rule plot_signatures:
     input:
         STM_EXOME_SIGNATURES_FILE,
         STM_ALL_NORMALIZED_EXPOSURES_FILE,
-        ALL_MC_FILE
+        MC_FILE
     output:
         SIG_PLOT
     script:
