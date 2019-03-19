@@ -6,6 +6,7 @@ wildcard_constraints:
     iter_num="\d+"
 
 include: "../Snakefile"
+include: '../signature-visualization/Snakefile'
 
 # Directories
 COSMIC_DIR = 'COSMIC'
@@ -65,7 +66,8 @@ STM_HELDOUT_LIKELIHOOD_FILE=join(OUTPUT_DIR, 'stm-heldout-likelihood_{covariates
 STM_COMBINED_HELDOUT_LIKELIHOOD_FILE=join(OUTPUT_DIR, 'stm-combined-heldout_{covariates}_{n_samples}-{total_n_samples}-{iter_num}.tsv')
 LIKELIHOOD_PLOT=join(OUTPUT_DIR,'likelihood-plot_{covariates1}_{covariates2}_{n_samples}-{total_n_samples}-{iter_num}.pdf')
 
-# Shuffled Files
+SIG_PLOT=join(OUTPUT_DIR, "stm-signatures_{covariates}_{K}_{n_samples}-{total_n_samples}-{iter_num}.pdf")
+SIG_COSINE_PLOT=join(OUTPUT_DIR, "stm-cosine-similarity_{covariates}_{K}_{n_samples}-{total_n_samples}-{iter_num}.pdf")
 
 # parameters
 seed = "123456"
@@ -81,13 +83,18 @@ SHUFFLE_RANGE=range(0,1000)
 
 covariates=["feature1", "NULL"]
 
-# rule all:
-#     input:
-#         expand(SHUFFLED_MC_FILE, K=4, n_samples=250, total_n_samples=250, iter_num=0, shuffle_num=0),
-#         expand(SIGMA_FILE, K=4, n_samples=250, total_n_samples=250, iter_num=0, covariates="feature1"),
-#         expand(COV_SIG_FILE, K=4, n_samples=250, total_n_samples=250, iter_num=0, covariates="feature1", covariate_of_interest="feature1"),
-#         expand(SHUFFLED_COV_SIG_FILE, K=4, n_samples=250, total_n_samples=250, iter_num=0, covariates="feature1", covariate_of_interest="feature1", shuffle_num=0),
-#         expand(EMP_COV_SIG_FILE, K=4, n_samples=250, total_n_samples=250, iter_num=0, covariates="feature1", covariate_of_interest="feature1"),
+rule all:
+    input:
+        expand(SIG_COSINE_PLOT, K=4, n_samples=N_SAMPLES, total_n_samples=250, iter_num=1, covariates="feature1"),
+        #expand(SHUFFLED_MC_FILE, K=4, n_samples=250, total_n_samples=250, iter_num=0, shuffle_num=0),
+        #expand(SIGMA_FILE, K=4, n_samples=250, total_n_samples=250, iter_num=0, covariates="feature1"),
+        expand(COV_SIG_FILE, K=4, n_samples=N_SAMPLES, total_n_samples=250, iter_num=0, covariates="feature1", covariate_of_interest="feature1"),
+        #expand(SHUFFLED_COV_SIG_FILE, K=4, n_samples=250, total_n_samples=250, iter_num=0, covariates="feature1", covariate_of_interest="feature1", shuffle_num=0),
+        #expand(EMP_COV_SIG_FILE, K=4, n_samples=250, total_n_samples=250, iter_num=0, covariates="feature1", covariate_of_interest="feature1"),
+
+rule figure_1:
+    input:
+        expand(LIKELIHOOD_PLOT, K=4, n_samples=N_SAMPLES, total_n_samples=250, iter_num=ITER_RANGE, covariates1="feature1", covariates2="NULL")
 
 rule calculate_covariate_significance:
     input:
@@ -264,13 +271,13 @@ rule generate_lambdas:
         "src/generate_handcrafted_lambdas.py"
 
 # Download and process COSMIC signatures
-rule download_cosmic_signatures:
-    params:
-        url=COSMIC_GENOME_SIGS_URL
-    output:
-        COSMIC_SIGNATURES
-    shell:
-        'wget -O {output} {params.url}'
+# rule download_cosmic_signatures:
+#     params:
+#         url=COSMIC_GENOME_SIGS_URL
+#     output:
+#         COSMIC_SIGNATURES
+#     shell:
+#         'wget -O {output} {params.url}'
 
 rule create_n_mutations_distribution_file:
     input:
