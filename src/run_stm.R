@@ -25,6 +25,7 @@ run.stm <- function(mutation.count.file, feature.file, covariates, K, seed, expo
   write.table(effect.frame, file=snakemake@output[[3]], sep="\t")
   covariate.list <- strsplit(covariates, "\\+")[[1]]
   gamma <- stm1$mu$gamma
+  print(gamma)
   if (covariates != "NULL"){
     rownames(gamma) <- c("default", covariate.list)
   }
