@@ -37,7 +37,6 @@ TEST_MC_FILE=join(OUTPUT_DIR, "mutation-count-test_{n_samples}-{total_n_samples}
 TRAIN_MC_FILE=join(OUTPUT_DIR, "mutation-count-train_{n_samples}-{total_n_samples}-{iter_num}_{fold}.tsv")
 
 EXP_GT_EXPOSURES_FILE=join(OUTPUT_DIR, "{n_samples}_{total_n_samples}_{iter_num}_exposures.tsv")
-
 EXP_EXPOSURES_FILE=join(OUTPUT_DIR, '{model}-all-count-exposures_{covariates}_{K}_{n_samples}-{total_n_samples}-{iter_num}.tsv')
 EXP_SIGNATURES_FILE=join(OUTPUT_DIR, '{model}-exome-signatures_{covariates}_{K}_{n_samples}-{total_n_samples}-{iter_num}.tsv')
 DIFFERENTIAL_EXPOSURE_FILE=join(OUTPUT_DIR, '{model}-differential-exposures_{covariates}_{K}_{n_samples}-{total_n_samples}-{iter_num}.tsv')
@@ -47,35 +46,98 @@ COSINE_SIM=join(OUTPUT_DIR, '{model}-cosine-similarity_{covariates}_{K}_{n_sampl
 COSINE_TABLE=join(OUTPUT_DIR, "cosine_{covariates}_{model}_{K}.tsv")
 COSINE_PLOT=join(OUTPUT_DIR, "all_cosine_{K}.pdf")
 
+# Covariate Significance Test files
+SHUFFLED_MC_FILE=join(OUTPUT_DIR, "mutation-count-all_{n_samples}-{total_n_samples}-{iter_num}_{shuffle_num}.tsv")
+SHUFFLED_FEATURE_FILE=join(OUTPUT_DIR, "features-all_{n_samples}-{total_n_samples}-{iter_num}_{shuffle_num}.tsv")
+SHUFFLED_STM_EXOME_SIGNATURES_FILE=join(OUTPUT_DIR, 'stm-exome-signatures_{covariates}_{K}_{n_samples}-{total_n_samples}-{iter_num}_{shuffle_num}.tsv')
+SHUFFLED_SIGMA_FILE=join(OUTPUT_DIR, 'stm-sigma_{covariates}_{K}_{n_samples}-{total_n_samples}-{iter_num}_{shuffle_num}.tsv')
+SHUFFLED_GAMMA_FILE=join(OUTPUT_DIR, 'stm-gamma_{covariates}_{K}_{n_samples}-{total_n_samples}-{iter_num}_{shuffle_num}.tsv')
+SHUFFLED_COV_SIG_FILE=join(OUTPUT_DIR, 'stm-covariate-significance_{covariate_of_interest}_{covariates}_{K}_{n_samples}-{total_n_samples}-{iter_num}_{shuffle_num}.tsv')
+EMP_COV_SIG_FILE=join(OUTPUT_DIR, 'stm-empirical-covariate-significance_{covariate_of_interest}_{covariates}_{K}_{n_samples}-{total_n_samples}-{iter_num}.tsv')
+
+# Model Files
+SIGMA_FILE=join(OUTPUT_DIR, 'stm-sigma_{covariates}_{K}_{n_samples}-{total_n_samples}-{iter_num}.tsv')
+GAMMA_FILE=join(OUTPUT_DIR, 'stm-gamma_{covariates}_{K}_{n_samples}-{total_n_samples}-{iter_num}.tsv')
+COV_SIG_FILE=join(OUTPUT_DIR, 'stm-covariate-significance_{covariate_of_interest}_{covariates}_{K}_{n_samples}-{total_n_samples}-{iter_num}.tsv')
+
 # Heldout likelihood output files
 STM_HELDOUT_LIKELIHOOD_FILE=join(OUTPUT_DIR, 'stm-heldout-likelihood_{covariates}_{K}_{n_samples}-{total_n_samples}-{iter_num}_{fold}.tsv')
 STM_COMBINED_HELDOUT_LIKELIHOOD_FILE=join(OUTPUT_DIR, 'stm-combined-heldout_{covariates}_{n_samples}-{total_n_samples}-{iter_num}.tsv')
 LIKELIHOOD_PLOT=join(OUTPUT_DIR,'likelihood-plot_{covariates1}_{covariates2}_{n_samples}-{total_n_samples}-{iter_num}.pdf')
 
+# Shuffled Files
+
 # parameters
 seed = "123456"
 ACTIVE_SIGS= [1, 2, 3, 5]
 N_SAMPLES=range(50, 300, 50)
-ITER_RANGE=range(0,10)
+ITER_RANGE=range(0,2)
 N_FOLDS=5
 FOLDS=range(0, N_FOLDS)
 min_K = 2
 max_K = 8
 K_RANGE=range(min_K, max_K+1)
+SHUFFLE_RANGE=range(0,1000)
 
 covariates=["feature1", "NULL"]
 
-rule all:
-    input:
-        # expand(COSINE_SIM, K=4, model="stm", covariates="feature1", n_samples=250, total_n_samples=250, iter_num=0),
-        expand(COSINE_TABLE, covariates=["feature1", "NULL"], model="stm", K=4),
-        # expand(COSINE_PLOT, K=4),
-        expand(MSE_PLOT, K=4),
-        expand(STM_HELDOUT_LIKELIHOOD_FILE, K=4, n_samples=250, total_n_samples=250, iter_num=0, fold=0, covariates=covariates),
-        expand(TEST_MC_FILE, n_samples=250, total_n_samples=250, iter_num=0, fold=0),
-        expand(STM_COMBINED_HELDOUT_LIKELIHOOD_FILE, n_samples=250, total_n_samples=250, iter_num=0, covariates=covariates),
-        expand(LIKELIHOOD_PLOT, covariates1="feature1", covariates2="NULL", n_samples=250, total_n_samples=250, iter_num=0),
+# rule all:
+#     input:
+#         expand(SHUFFLED_MC_FILE, K=4, n_samples=250, total_n_samples=250, iter_num=0, shuffle_num=0),
+#         expand(SIGMA_FILE, K=4, n_samples=250, total_n_samples=250, iter_num=0, covariates="feature1"),
+#         expand(COV_SIG_FILE, K=4, n_samples=250, total_n_samples=250, iter_num=0, covariates="feature1", covariate_of_interest="feature1"),
+#         expand(SHUFFLED_COV_SIG_FILE, K=4, n_samples=250, total_n_samples=250, iter_num=0, covariates="feature1", covariate_of_interest="feature1", shuffle_num=0),
+#         expand(EMP_COV_SIG_FILE, K=4, n_samples=250, total_n_samples=250, iter_num=0, covariates="feature1", covariate_of_interest="feature1"),
 
+rule calculate_covariate_significance:
+    input:
+        expand(EMP_COV_SIG_FILE, K=4, n_samples=N_SAMPLES, total_n_samples=250, iter_num=0, covariates="feature1", covariate_of_interest="feature1"),
+
+rule covariate_empirical_significance:
+    input:
+        COV_SIG_FILE.format(covariates="{covariates}", covariate_of_interest="{covariate_of_interest}", n_samples="{n_samples}", total_n_samples="{total_n_samples}", iter_num="{iter_num}", K="{K}"),
+        expand(SHUFFLED_COV_SIG_FILE, covariates="{covariates}", covariate_of_interest="{covariate_of_interest}", n_samples="{n_samples}", total_n_samples="{total_n_samples}", iter_num="{iter_num}", K="{K}", shuffle_num=SHUFFLE_RANGE),
+    output:
+        EMP_COV_SIG_FILE
+    script:
+        "../src/calculate_empirical_covariate_significance.py"
+
+
+rule covariate_significance:
+    input:
+        SIGMA_FILE,
+        GAMMA_FILE,
+        EXP_FEATURES_FILE
+    params:
+        seed=seed
+    output:
+        COV_SIG_FILE
+    script:
+        "../src/estimate_significance.py"
+
+rule shuffle_covariates:
+    params:
+        seed=seed
+    input:
+        EXP_MC_FILE,
+        EXP_FEATURES_FILE,
+    output:
+        SHUFFLED_MC_FILE,
+        SHUFFLED_FEATURE_FILE
+    script:
+        "../src/shuffle_covariates.py"
+
+rule shuffled_covariate_significance:
+    input:
+        SHUFFLED_SIGMA_FILE,
+        SHUFFLED_GAMMA_FILE,
+        SHUFFLED_FEATURE_FILE
+    params:
+        seed=seed
+    output:
+        SHUFFLED_COV_SIG_FILE
+    script:
+        "../src/estimate_significance.py"
 
 rule combine_stm_heldout_likelihood_files:
     input:
