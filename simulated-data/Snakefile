@@ -1,4 +1,5 @@
 from os.path import join
+from itertools import chain
 
 wildcard_constraints:
     total_n_samples="\d+",
@@ -73,7 +74,7 @@ SIG_COSINE_PLOT=join(OUTPUT_DIR, "stm-cosine-similarity_{covariates}_{K}_{n_samp
 seed = "123456"
 ACTIVE_SIGS= [1, 2, 3, 5]
 N_SAMPLES=range(50, 300, 50)
-ITER_RANGE=range(0,2)
+ITER_RANGE=chain(range(0,4), range(5,11))
 N_FOLDS=5
 FOLDS=range(0, N_FOLDS)
 min_K = 2
@@ -85,16 +86,17 @@ covariates=["feature1", "NULL"]
 
 rule all:
     input:
-        expand(SIG_COSINE_PLOT, K=4, n_samples=N_SAMPLES, total_n_samples=250, iter_num=1, covariates="feature1"),
+        expand(STM_HELDOUT_LIKELIHOOD_FILE, K=4, n_samples=250, total_n_samples=250, iter_num=9, fold=FOLDS, covariates="NULL"),
+        # expand(SIG_COSINE_PLOT, K=4, n_samples=N_SAMPLES, total_n_samples=250, iter_num=1, covariates="feature1"),
         #expand(SHUFFLED_MC_FILE, K=4, n_samples=250, total_n_samples=250, iter_num=0, shuffle_num=0),
         #expand(SIGMA_FILE, K=4, n_samples=250, total_n_samples=250, iter_num=0, covariates="feature1"),
-        expand(COV_SIG_FILE, K=4, n_samples=N_SAMPLES, total_n_samples=250, iter_num=0, covariates="feature1", covariate_of_interest="feature1"),
+        # expand(COV_SIG_FILE, K=4, n_samples=N_SAMPLES, total_n_samples=250, iter_num=0, covariates="feature1", covariate_of_interest="feature1"),
         #expand(SHUFFLED_COV_SIG_FILE, K=4, n_samples=250, total_n_samples=250, iter_num=0, covariates="feature1", covariate_of_interest="feature1", shuffle_num=0),
         #expand(EMP_COV_SIG_FILE, K=4, n_samples=250, total_n_samples=250, iter_num=0, covariates="feature1", covariate_of_interest="feature1"),
 
 rule figure_1:
     input:
-        expand(LIKELIHOOD_PLOT, K=4, n_samples=N_SAMPLES, total_n_samples=250, iter_num=ITER_RANGE, covariates1="feature1", covariates2="NULL")
+        expand(LIKELIHOOD_PLOT, n_samples=N_SAMPLES, total_n_samples=250, iter_num=ITER_RANGE, covariates1="feature1", covariates2="NULL")
 
 rule calculate_covariate_significance:
     input:
