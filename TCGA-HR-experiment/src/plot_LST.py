@@ -8,6 +8,7 @@ rcParams.update({'figure.autolayout': True})
 rcParams.update({'font.size': 12})
 from textwrap import fill
 from scipy.stats import ranksums
+# sns.palplot(sns.hls_palette(8, l=.3, s=.8))
 
 def get_hr_status(row):
     if row["FANCF"] == 1:
@@ -30,9 +31,9 @@ if __name__ == '__main__':
     # print(df["HR Status"])
     heldout = "heldout.ratio"
     df = df.loc[df[gene] == 0]
-    print(ranksums(df.loc[df[heldout] > 0]["LST"], df.loc[df[heldout] < 0]["LST"]))
+    # print(ranksums(df.loc[df[heldout] > 0]["LST"], df.loc[df[heldout] < 0]["LST"]))
     df["Status of HR Genes"] = df.apply(get_hr_status, axis=1)
-    palette ={"Wildtype":"C0","Other HR":"C2"}
+    palette ={"Wildtype":"C0","Other HR":"C1"}
     ax = sns.scatterplot(x=df[heldout], y=df["LST"], hue = df.apply(get_hr_status, axis=1), palette=palette)
     ax.set(xlabel="Held-out Log Likelihood Ratio (LLR)", ylabel="LST Count")
     plt.savefig(snakemake.output[0])
