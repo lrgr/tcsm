@@ -105,7 +105,7 @@ rule somatic_signatures_output:
 
 rule calculate_covariate_significance:
     input:
-        expand(EMP_COV_SIG_FILE, K=4, n_samples=N_SAMPLES, total_n_samples=250, iter_num=0, covariates="feature1", covariate_of_interest="feature1"),
+        expand(EMP_COV_SIG_FILE, K=4, n_samples=[50, 250], total_n_samples=250, iter_num=ITER_RANGE, covariates="feature1", covariate_of_interest="feature1"),
 
 rule covariate_empirical_significance:
     input:
