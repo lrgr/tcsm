@@ -14,7 +14,5 @@ if __name__ == '__main__':
     for topic in df.index:
         cdf = ECDF(df.loc[topic])
         output.append(1-cdf(cov_sig.loc[topic]))
-    print(output)
     corrected_pvalue = multipletests(output, method="fdr_bh")[1]
-    print(corrected_pvalue)
     pd.Series(index=df.index, data=corrected_pvalue).to_csv(snakemake.output[0], sep="\t")
