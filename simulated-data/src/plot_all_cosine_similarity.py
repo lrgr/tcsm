@@ -25,13 +25,14 @@ if __name__ == '__main__':
     df = df.set_index('model', append=True)
     df.columns = [int(col) for col in df.columns]
     df = df.reindex(sorted(df.columns), axis=1)
-    print(df)
     # index is the number of samples
     # columns are multi-index, the signature and models (ex. stm and ctm)
     # we want to create a subplot for each signature
     signatures = ["SBS3", "SBS5"]
     model_color_map = {"TCSM": "r", "TCSM (no covariates)": "b", "Somatic Signatures": "g"}
     fig, ax = plt.subplots(ncols=len(signatures))
+    fig.set_figheight(3)
+    fig.set_figwidth(7.5)
     for signature, row in zip(signatures, ax):
         signature_df = df.loc[signature]
         models = signature_df.index
