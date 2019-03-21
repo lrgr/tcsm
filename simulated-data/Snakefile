@@ -88,23 +88,24 @@ SHUFFLE_RANGE=range(0,1000)
 
 covariates=["feature1", "NULL"]
 
+K=4
 
 # Top Level Rules
 rule figure_1:
     input:
-        expand(COSINE_PLOT, K=4),
-        expand(MSE_PLOT, K=4),
+        expand(COSINE_PLOT, K=K),
+        expand(MSE_PLOT, K=K),
 
 
 rule somatic_signatures_output:
     input:
-        expand(MSE_TABLE, K="{K}", covariates="NULL", model="SS"),
-        expand(COSINE_TABLE, K="{K}", covariates="NULL", model="SS")
+        expand(MSE_TABLE, K=K, covariates="NULL", model="SS"),
+        expand(COSINE_TABLE, K=K, covariates="NULL", model="SS")
 
 rule stm_output:
     input:
-        expand(COSINE_TABLE, model=["stm"], covariates=["feature1", "NULL"], K="{K}"),
-        expand(MSE_TABLE, K="{K}", covariates=["feature1", "NULL"], model="stm"),
+        expand(COSINE_TABLE, model="stm", covariates=["feature1", "NULL"], K=K),
+        expand(MSE_TABLE, model="stm", covariates=["feature1", "NULL"], K=K),
 
 rule calculate_covariate_significance:
     input:
