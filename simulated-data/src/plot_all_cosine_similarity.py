@@ -41,6 +41,6 @@ if __name__ == '__main__':
         # row.set_xlabel("Number of Samples")
     ax[0].set_ylabel('Cosine Similarity')
     handles, labels = row.get_legend_handles_labels()
-    fig.legend(handles, labels, loc='upper right')
+    # fig.legend(handles, labels, loc='upper right')
     # plt.show()
     plt.savefig(snakemake.output[0])

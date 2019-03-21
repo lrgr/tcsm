@@ -8,10 +8,12 @@ wildcard_constraints:
 
 include: "../Snakefile"
 include: '../signature-visualization/Snakefile'
+include: "../SomaticSignatures/Snakefile"
 
 # Directories
 COSMIC_DIR = 'COSMIC'
 OUTPUT_DIR = 'processed'
+RAW_DIR = 'raw'
 
 # URLs
 SBS96_COUNT_URL = "https://obj.umiacs.umd.edu/mutation-signature-explorer/mutations/PanCanAtlas/processed/counts/counts.TCGA-BRCA_BRCA_mc3.v0.2.8.WXS.SBS-96.tsv"
@@ -70,11 +72,13 @@ LIKELIHOOD_PLOT=join(OUTPUT_DIR,'likelihood-plot_{covariates1}_{covariates2}_{n_
 SIG_PLOT=join(OUTPUT_DIR, "stm-signatures_{covariates}_{K}_{n_samples}-{total_n_samples}-{iter_num}.pdf")
 SIG_COSINE_PLOT=join(OUTPUT_DIR, "stm-cosine-similarity_{covariates}_{K}_{n_samples}-{total_n_samples}-{iter_num}.pdf")
 
+MODEL_SELECTION_OUTPUT=join(RAW_DIR)
+
 # parameters
 seed = "123456"
 ACTIVE_SIGS= [1, 2, 3, 5]
 N_SAMPLES=range(50, 300, 50)
-ITER_RANGE=chain(range(0,4), range(5,11))
+ITER_RANGE=range(0,2)
 N_FOLDS=5
 FOLDS=range(0, N_FOLDS)
 min_K = 2
@@ -84,19 +88,23 @@ SHUFFLE_RANGE=range(0,1000)
 
 covariates=["feature1", "NULL"]
 
-rule all:
-    input:
-        expand(STM_HELDOUT_LIKELIHOOD_FILE, K=4, n_samples=250, total_n_samples=250, iter_num=9, fold=FOLDS, covariates="NULL"),
-        # expand(SIG_COSINE_PLOT, K=4, n_samples=N_SAMPLES, total_n_samples=250, iter_num=1, covariates="feature1"),
-        #expand(SHUFFLED_MC_FILE, K=4, n_samples=250, total_n_samples=250, iter_num=0, shuffle_num=0),
-        #expand(SIGMA_FILE, K=4, n_samples=250, total_n_samples=250, iter_num=0, covariates="feature1"),
-        # expand(COV_SIG_FILE, K=4, n_samples=N_SAMPLES, total_n_samples=250, iter_num=0, covariates="feature1", covariate_of_interest="feature1"),
-        #expand(SHUFFLED_COV_SIG_FILE, K=4, n_samples=250, total_n_samples=250, iter_num=0, covariates="feature1", covariate_of_interest="feature1", shuffle_num=0),
-        #expand(EMP_COV_SIG_FILE, K=4, n_samples=250, total_n_samples=250, iter_num=0, covariates="feature1", covariate_of_interest="feature1"),
 
+# Top Level Rules
 rule figure_1:
     input:
-        expand(LIKELIHOOD_PLOT, n_samples=N_SAMPLES, total_n_samples=250, iter_num=ITER_RANGE, covariates1="feature1", covariates2="NULL")
+        expand(COSINE_PLOT, K=4),
+        expand(MSE_PLOT, K=4),
+
+
+rule somatic_signatures_output:
+    input:
+        expand(MSE_TABLE, K="{K}", covariates="NULL", model="SS"),
+        expand(COSINE_TABLE, K="{K}", covariates="NULL", model="SS")
+
+rule stm_output:
+    input:
+        expand(COSINE_TABLE, model=["stm"], covariates=["feature1", "NULL"], K="{K}"),
+        expand(MSE_TABLE, K="{K}", covariates=["feature1", "NULL"], model="stm"),
 
 rule calculate_covariate_significance:
     input:
@@ -148,6 +156,7 @@ rule shuffled_covariate_significance:
     script:
         "../src/estimate_significance.py"
 
+
 rule combine_stm_heldout_likelihood_files:
     input:
         expand(STM_HELDOUT_LIKELIHOOD_FILE, K = K_RANGE, n_samples="{n_samples}",
@@ -176,7 +185,8 @@ rule split_test_training_data:
 
 rule plot_stm_ctm_cosine_similarity:
     input:
-        expand(COSINE_TABLE, model=["stm"], covariates=["feature1", "NULL"], K="{K}")
+        expand(COSINE_TABLE, model=["stm"], covariates=["feature1", "NULL"], K="{K}"),
+        expand(COSINE_TABLE, model=["SS"], covariates="NULL", K="{K}")
     output:
         COSINE_PLOT
     script:
@@ -201,7 +211,8 @@ rule cosine_similarity:
 
 rule plot_mse:
     input:
-        expand(MSE_TABLE, K="{K}", covariates=["feature1", "NULL"], model="stm")
+        expand(MSE_TABLE, K="{K}", covariates=["feature1", "NULL"], model="stm"),
+        expand(MSE_TABLE, K="{K}", covariates="NULL", model="SS")
     output:
         MSE_PLOT
     script:

@@ -44,7 +44,7 @@ if __name__ == '__main__':
     handles, labels = row.get_legend_handles_labels()
     #labels = [fill(l, 8, break_long_words=False) for l in labels]
     #row.legend(handles, labels, loc='upper left', bbox_to_anchor=(1.04,1.1))
-    fig.legend(handles, labels, loc='upper right')
+    # fig.legend(handles, labels, loc='upper right')
 
     # fig.text(0.0, 0.5, 'mean MSE', va='center', rotation='vertical')
     # plt.xlabel("number of samples")

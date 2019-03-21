@@ -38,8 +38,7 @@ rule calculate_cosine_similarity:
         COSMIC_SIGNATURES,
         STM_EXOME_SIGNATURES_FILE
     output:
-        SIG_COSINE_PLOT,
-        SIG_COSINE_SIM
+        SIG_COSINE_PLOT
     script:
         "src/plot_cosine_similarity.py"
 

@@ -16,7 +16,7 @@ if __name__ == '__main__':
     exp_sigs = exp_sigs.fillna(0)
     M = cosine_similarity(exp_sigs, gt_sigs)
     df = pd.DataFrame(data=M, index=range(1, len(exp_sigs.index)+1), columns=range(1, len(gt_sigs.index)+1))
-    df.to_csv(snakemake.output[1], sep="\t")
+    # df.to_csv(snakemake.output[1], sep="\t")
     ax = sns.heatmap(df, annot=True, cbar_kws={'label': 'Cosine similarity'})
     ax.set_ylabel("COSMIC")
     ax.set_xlabel("TCSM", fontname='Courier New')
