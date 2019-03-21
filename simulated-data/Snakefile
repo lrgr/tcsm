@@ -99,13 +99,9 @@ rule figure_1:
 
 rule somatic_signatures_output:
     input:
-        expand(MSE_TABLE, K=K, covariates="NULL", model="SS"),
-        expand(COSINE_TABLE, K=K, covariates="NULL", model="SS")
+        expand(EXP_EXPOSURES_FILE, K=K, covariates="NULL", model="SS", n_samples=N_SAMPLES, total_n_samples=N_SAMPLES[-1], iter_num=ITER_RANGE),
+        expand(EXP_SIGNATURES_FILE, K=K, covariates="NULL", model="SS", n_samples=N_SAMPLES, total_n_samples=N_SAMPLES[-1], iter_num=ITER_RANGE),
 
-rule stm_output:
-    input:
-        expand(COSINE_TABLE, model="stm", covariates=["feature1", "NULL"], K=K),
-        expand(MSE_TABLE, model="stm", covariates=["feature1", "NULL"], K=K),
 
 rule calculate_covariate_significance:
     input:
