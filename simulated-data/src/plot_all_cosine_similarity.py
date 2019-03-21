@@ -19,9 +19,7 @@ if __name__ == '__main__':
         df["model"] = "{}_{}".format(model, covariates)
         output.append(df)
     df = pd.concat(output)
-    print(df)
     df["model"] = df["model"].map({"stm_feature1": "TCSM", "stm_NULL": "TCSM (no covariates)", "SS_NULL": "Somatic Signatures" })
-    print(df)
     df = df.set_index('model', append=True)
     df.columns = [int(col) for col in df.columns]
     df = df.reindex(sorted(df.columns), axis=1)
