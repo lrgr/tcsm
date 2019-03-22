@@ -72,8 +72,8 @@ seed="123456"
 N_FOLDS=5
 FOLDS=range(0, N_FOLDS)
 
-all_covariates="CancerType+Smoker+DNPs"
-cancertype_covariates="CancerType"
+all_covariates="SKCM+LUSC+Smoker+DNPs"
+cancertype_covariates="SKCM+LUSC"
 CANCER_TYPES=["SKCM", "LUSC"]
 MIN_K=2
 MAX_K=10
@@ -84,8 +84,8 @@ K=4
 rule figure_3:
     input:
         NULL_CANCERTYPE_COVARIATE_LIKELIHOOD_PLOT,
-        SIG_COSINE_PLOT.format(method="stm", covariates="CancerType", K=K, cancer_type="LUSCSKCM"),
-        RATIO_DNP_SCATTER_PLOT.format(covariate_of_interest="CancerType", covariates="CancerType", K=K, cancer_type="LUSCSKCM")
+        #SIG_COSINE_PLOT.format(method="stm", covariates="CancerType", K=K, cancer_type="LUSCSKCM"),
+        #RATIO_DNP_SCATTER_PLOT.format(covariate_of_interest="CancerType", covariates="CancerType", K=K, cancer_type="LUSCSKCM")
 
 rule supplemental_figures:
     input:
