@@ -7,10 +7,19 @@ from matplotlib import rcParams
 rcParams.update({'figure.autolayout': True})
 #matplotlib.rc('text', usetex = True)
 
+def plot_likelihoods(df, ax):
+    for c in df.columns:
+        ax.plot(df[c], label=c)
+    ax.set_xlabel("Number $\it{K}$ Signatures Used", fontsize=14)
+    ax.margins(y=.5)
+    ax.legend()
+    ax.set_ylabel("Held-out Log Likelihood", fontsize=14)
+    return ax
 
-if __name__ == '__main__':
+
+def combine_likelihood_files(files):
     output = []
-    for f in snakemake.input:
+    for f in files:
         # get the covariates used from the filename
         out = re.split("_|\.", f)
         covariates = out[1]
@@ -27,10 +36,10 @@ if __name__ == '__main__':
     df.index = [m.replace("HRINACTIVATIONS", "$\it{ATM}$/$\it{BRCA1}$/$\it{BRCA2}$/$\it{CHEK2}$/$\it{FANCF}$/$\it{FANCM}$/${RAD51C}$") for m in df.index]
     models = df.index.unique()
     df = df.transpose()
-    for c in df.columns:
-        plt.plot(df[c], label=c)
-    plt.xlabel("Number $\it{K}$ Signatures Used")
-    plt.legend()
-    plt.ylabel("Held-out Log Likelihood")
-    # plt.show()
+    return df
+
+if __name__ == '__main__':
+    df = combine_likelihood_files(snakemake.input)
+    f, ax = plt.subplots()
+    ax = plot_likelihoods(df, ax)
     plt.savefig(snakemake.output[0])

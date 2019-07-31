@@ -14,6 +14,9 @@ DATA_DIR = 'data'
 wildcard_constraints:
     cancer_type="LUSCSKCM"
 
+# Source code files
+SRC_DIR = join("..", "src")
+
 # Files from TCGA-data subworkflow
 CLINICAL_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_clinical.tsv")
 LST_FEATURE_FILE=join(OUTPUT_DIR, "TCGA-{cancer_type}_LST_feature.tsv")
@@ -67,6 +70,8 @@ SHUFFLED_GAMMA_FILE=join(OUTPUT_DIR, 'stm-gamma_{covariates}_{K}_TCGA-{cancer_ty
 SHUFFLED_COV_SIG_FILE=join(OUTPUT_DIR, 'stm-covariate-significance_{covariate_of_interest}_{covariates}_{K}_TCGA-{cancer_type}_{iter_num}.tsv')
 EMP_COV_SIG_FILE=join(OUTPUT_DIR, 'stm-empirical-covariate-significance_{covariate_of_interest}_{covariates}_{K}_TCGA-{cancer_type}.tsv')
 
+FIGURE4 = join(OUTPUT_DIR, "figure4.pdf")
+
 # Parameters
 seed="123456"
 N_FOLDS=5
@@ -80,12 +85,24 @@ MAX_K=10
 K_RANGE=range(MIN_K, MAX_K+1, 1)
 K=4
 
+rule figure4:
+    params:
+        SRC_DIR
+    input:
+        COMBINED_STM_HELDOUT_LIKELIHOOD_RATIO_FILE.format(covariate_of_interest="CancerType", covariates="CancerType", K=K, cancer_type="LUSCSKCM"),
+        expand(STM_COMBINED_HELDOUT_LIKELIHOOD_FILE, covariates=["NULL", cancertype_covariates, all_covariates], cancer_type="LUSCSKCM")
+    output:
+        FIGURE4
+    script:
+        "src/plot_fig4.py"
 
 rule figure_3:
     input:
         NULL_CANCERTYPE_COVARIATE_LIKELIHOOD_PLOT,
-        #SIG_COSINE_PLOT.format(method="stm", covariates="CancerType", K=K, cancer_type="LUSCSKCM"),
-        #RATIO_DNP_SCATTER_PLOT.format(covariate_of_interest="CancerType", covariates="CancerType", K=K, cancer_type="LUSCSKCM")
+        # SIG_COSINE_PLOT.format(method="stm", covariates="CancerType", K=K, cancer_type="LUSCSKCM"),
+        # RATIO_DNP_SCATTER_PLOT.format(covariate_of_interest="CancerType", covariates="CancerType", K=K, cancer_type="LUSCSKCM")
+
+
 
 rule supplemental_figures:
     input:
