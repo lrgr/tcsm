@@ -96,14 +96,6 @@ rule figure4:
     script:
         "src/plot_fig4.py"
 
-rule figure_3:
-    input:
-        NULL_CANCERTYPE_COVARIATE_LIKELIHOOD_PLOT,
-        # SIG_COSINE_PLOT.format(method="stm", covariates="CancerType", K=K, cancer_type="LUSCSKCM"),
-        # RATIO_DNP_SCATTER_PLOT.format(covariate_of_interest="CancerType", covariates="CancerType", K=K, cancer_type="LUSCSKCM")
-
-
-
 rule supplemental_figures:
     input:
         SIG_PLOT.format(method="stm", covariates="CancerType", K=K),
