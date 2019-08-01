@@ -10,16 +10,14 @@ rcParams['axes.xmargin'] = 0
 
 if __name__ == '__main__':
     output = []
-    for f in snakemake.input:
+    for i in range(0, len(snakemake.input)):
         # extract the number of samples from the filename
-        in_file = re.split("_|\.", f)
-        covariates = in_file[1]
-        model = in_file[2]
-        df = pd.read_csv(f, sep="\t", index_col=0)
-        df["model"] = "{}_{}".format(model, covariates)
+        model = re.split("_|\.", snakemake.input[i])[1]
+        df = pd.read_csv(snakemake.input[i], sep="\t", index_col=0)
+        df["model"] = model
         output.append(df)
     df = pd.concat(output)
-    df["model"] = df["model"].map({"stm_feature1": "TCSM", "stm_NULL": "TCSM (no covariates)", "SS_NULL": "Somatic Signatures" })
+    df["model"] = df["model"].map({"stm": "TCSM", "ctm": "TCSM (no covariates)", "SS": "Somatic Signatures" })
     df = df.set_index('model', append=True)
     df.columns = [int(col) for col in df.columns]
     df = df.reindex(sorted(df.columns), axis=1)
@@ -39,7 +37,7 @@ if __name__ == '__main__':
         row.set_title("COSMIC Signature {}".format(signature[-1]))
         # row.set_xlabel("Number of Samples")
     ax[0].set_ylabel('Cosine Similarity')
-    handles, labels = row.get_legend_handles_labels()
+    # handles, labels = row.get_legend_handles_labels()
     # fig.legend(handles, labels, loc='upper right')
     # plt.show()
     plt.savefig(snakemake.output[0])

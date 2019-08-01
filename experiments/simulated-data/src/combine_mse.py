@@ -6,12 +6,14 @@ from sklearn.metrics import mean_squared_error
 
 if __name__ == '__main__':
     output = []
-    for f in snakemake.input:
+    for i in range(0, len(snakemake.input)):
         # extract the expected number of mutations from the filename
-        project = re.split("_|\.", f)[3]
-        n_samples = re.split("-|\.", project)[0]
-        iter_num = re.split("-|\.", project)[2]
-        df = pd.read_csv(f, sep="\t", index_col=0)
+        n_samples = re.split("_|\.", snakemake.input[i])[2]
+        iter_num = re.split("_|\.", snakemake.input[i])[4]
+        # print(n_mutations)
+        # print(snakemake.input[i])
+        df = pd.read_csv(snakemake.input[i], sep="\t", index_col=0)
+        # print(df)
         # get the max value
         df = df.apply(lambda x: mean_squared_error(x, pd.Series(0, index=x.index)), axis=0).to_frame()
         df.columns = ["mse"]

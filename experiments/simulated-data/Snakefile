@@ -1,0 +1,262 @@
+from os.path import join
+
+wildcard_constraints:
+    total_n_samples="\d+",
+    n_samples="\d+",
+    iter_num="\d+"
+
+ACTIVE_SIGS = [1, 2, 3, 5]
+ACTIVE_SIGNATURES = ' '.join([ '"%s"' % s for s in ACTIVE_SIGS])
+
+# URLs
+SBS96_COUNT_URL = "https://obj.umiacs.umd.edu/mutation-signature-explorer/mutations/PanCanAtlas/processed/counts/counts.TCGA-BRCA_BRCA_mc3.v0.2.8.WXS.SBS-96.tsv"
+
+# Directories
+DATA_DIR = 'raw'
+OUTPUT_DIR = 'processed'
+SRC_DIR = 'src'
+COSMIC_DIR = 'COSMIC'
+
+# Files
+# Data Files
+N_MUTATION_DISTRIBUTION_FILE=join(DATA_DIR, "BRCA-nmutations.tsv")
+SBS96_COUNT_FILE=join(DATA_DIR, 'TCGA-BRCA-sbs96.tsv')
+LAMBDA_FILE=join(DATA_DIR, "lambdas.csv")
+COSMIC_SIGNATURES = join(COSMIC_DIR, 'cosmic-signatures.tsv')
+
+# Simulated data files
+FEATURES_FILE=join(DATA_DIR, "{total_n_samples}_{iter_num}_features.tsv")
+DOC_FILE=join(OUTPUT_DIR, "{total_n_samples}_{iter_num}_documents.tsv")
+MODEL_FILE=join(OUTPUT_DIR, "{total_n_samples}_{iter_num}_model.npz")
+MUTATION_COUNT_MATRIX_FILE=join(OUTPUT_DIR, "{total_n_samples}_{iter_num}_mutation_count.tsv")
+GT_SIGNATURES_FILE=join(OUTPUT_DIR, "{total_n_samples}_{iter_num}_signatures.tsv")
+GT_EXPOSURES_FILE=join(OUTPUT_DIR, "{total_n_samples}_{iter_num}_exposures.tsv")
+
+# Downsampled data files
+EXP_FEATURES_FILE=join(OUTPUT_DIR, "{n_samples}_{total_n_samples}_{iter_num}_features.tsv")
+EXP_MUTATION_COUNT_MATRIX_FILE=join(OUTPUT_DIR, "{n_samples}_{total_n_samples}_{iter_num}_mutation_count.tsv")
+EXP_GT_EXPOSURES_FILE=join(OUTPUT_DIR, "{n_samples}_{total_n_samples}_{iter_num}_exposures.tsv")
+
+# Result files from TCSM
+EXP_EXPOSURES_FILE=join(OUTPUT_DIR, '{model}-exposures_{K}_{n_samples}_{total_n_samples}_{iter_num}.tsv')
+EXP_NORM_EXPOSURES_FILE=join(OUTPUT_DIR, '{model}-normalized-exposures_{K}_{n_samples}_{total_n_samples}_{iter_num}.tsv')
+EXP_SIGNATURES_FILE=join(OUTPUT_DIR, '{model}-signatures_{K}_{n_samples}_{total_n_samples}_{iter_num}.tsv')
+DIFFERENTIAL_EXPOSURE_FILE=join(OUTPUT_DIR, '{model}-differential-exposures_{K}_{n_samples}_{total_n_samples}_{iter_num}.tsv')
+COSINE_SIM=join(OUTPUT_DIR, '{model}-cosine-similarity_{K}_{n_samples}_{total_n_samples}_{iter_num}.tsv')
+MSE_TABLE=join(OUTPUT_DIR, "mse_{model}_{K}.tsv")
+COSINE_TABLE=join(OUTPUT_DIR, "cosine_{model}_{K}.tsv")
+
+# Plot files
+MSE_PLOT=join(OUTPUT_DIR, "all_mse_{K}.pdf")
+CS_PLOT=join(OUTPUT_DIR, "all_cs_{K}.pdf")
+FIGURE2=join(OUTPUT_DIR, "figure2.pdf")
+#MSE_SS_PLOT=join(OUTPUT_DIR, "SS_mse_{K}.pdf")
+
+# Code files
+RUN_CTM_R=join(SRC_DIR, 'run_ctm.R')
+RUN_STM_R=join(SRC_DIR, 'run_stm.R')
+CTM_LIKELIHOOD_R=join(SRC_DIR, 'ctm_heldout_likelihood.R')
+STM_LIKELIHOOD_R=join(SRC_DIR, 'stm_heldout_likelihood.R')
+
+# Parameters
+seed = "123456"
+N_SAMPLES=range(50, 300, 50)
+ITER_RANGE=range(0,50)
+
+rule all:
+    input:
+        MSE_PLOT.format(K=4),
+        CS_PLOT.format(K=4)
+
+# rules for plotting results
+rule plot_fig2:
+    input:
+        mse=expand(MSE_TABLE, K=4, model=["stm", "ctm", "SS"]),
+        cs=expand(COSINE_TABLE, K=4, model=["stm", "ctm", "SS"])
+    output:
+        FIGURE2
+    script:
+        "src/plot_fig4.py"
+
+rule plot_mse:
+    input:
+        expand(MSE_TABLE, K="{K}", model=["stm", "ctm", "SS"])
+    output:
+        MSE_PLOT
+    script:
+        "src/plot_all_mse.py"
+
+rule plot_cs:
+    input:
+        expand(COSINE_TABLE, K="{K}", model=["stm", "ctm", "SS"])
+    output:
+        CS_PLOT
+    script:
+        "src/plot_all_cosine_similarity.py"
+
+# Rules for analyzing TCSM results
+
+rule cosine_similarity:
+    input:
+        EXP_SIGNATURES_FILE,
+        GT_SIGNATURES_FILE
+    output:
+        COSINE_SIM
+    script:
+        "src/compare_signatures.py"
+
+rule combine_cosine_similarity:
+    input:
+        expand(COSINE_SIM, K="{K}", n_samples=N_SAMPLES, iter_num=ITER_RANGE, model="{model}", total_n_samples=250)
+    output:
+        COSINE_TABLE
+    script:
+        "src/combine_cosine_similarities.py"
+
+rule combine_exposures_mse:
+    input:
+        expand(DIFFERENTIAL_EXPOSURE_FILE, K="{K}", n_samples=N_SAMPLES, total_n_samples=250, iter_num=ITER_RANGE, model="{model}")
+    output:
+        MSE_TABLE
+    script:
+        "src/combine_mse.py"
+
+rule calculate_differential_exposure:
+    input:
+        EXP_EXPOSURES_FILE,
+        EXP_SIGNATURES_FILE,
+        GT_SIGNATURES_FILE,
+        EXP_GT_EXPOSURES_FILE
+    output:
+        DIFFERENTIAL_EXPOSURE_FILE
+    script:
+        "src/calculate_exposure_difference.py"
+
+rule convert_normalized_to_count_exposures:
+    input:
+        EXP_NORM_EXPOSURES_FILE,
+        EXP_MUTATION_COUNT_MATRIX_FILE
+    output:
+        EXP_EXPOSURES_FILE
+    script:
+        "src/convert_normalized_to_count_exposures.py"
+
+# Rules for running SomaticSignatures
+rule run_somatic_signatures:
+    wildcard_constraints:
+        model="SS"
+    conda:
+        "../../envs/SomaticSignatures.yml"
+    params:
+        seed="12345"
+    input:
+        EXP_MUTATION_COUNT_MATRIX_FILE
+    output:
+        EXP_SIGNATURES_FILE,
+        EXP_NORM_EXPOSURES_FILE
+    script:
+        "src/run_somatic_signatures.R"
+
+# Rules for running TCSM
+rule run_ctm:
+    wildcard_constraints:
+        model="ctm"
+    params:
+        RUN_CTM_R,
+        "12345"
+    input:
+        EXP_MUTATION_COUNT_MATRIX_FILE
+    output:
+        EXP_NORM_EXPOSURES_FILE,
+        EXP_SIGNATURES_FILE
+    script:
+        "{params[0]}"
+
+rule run_stm:
+    wildcard_constraints:
+        model="stm"
+    params:
+        RUN_STM_R,
+        "12345",
+        "~ feature1"
+    input:
+        EXP_MUTATION_COUNT_MATRIX_FILE,
+        EXP_FEATURES_FILE
+    output:
+        EXP_NORM_EXPOSURES_FILE,
+        EXP_SIGNATURES_FILE
+    script:
+        "{params[0]}"
+
+
+# Rules for generating the simulated data sets
+rule subsample_dmr_data:
+    input:
+        FEATURES_FILE,
+        MUTATION_COUNT_MATRIX_FILE,
+        GT_EXPOSURES_FILE
+    output:
+        EXP_FEATURES_FILE,
+        EXP_MUTATION_COUNT_MATRIX_FILE,
+        EXP_GT_EXPOSURES_FILE
+    script:
+        "src/subsample_dmr_data.py"
+
+rule simulate_dmr_data:
+    input:
+        topics_file=COSMIC_SIGNATURES,
+        features_file=FEATURES_FILE, # dataframe where indices are samples and columns are features
+        lambda_file=LAMBDA_FILE,
+        n_mutation_distribution=N_MUTATION_DISTRIBUTION_FILE
+    output:
+        documents_file=DOC_FILE,
+        model_file=MODEL_FILE,
+        matrix_file=MUTATION_COUNT_MATRIX_FILE,
+        signature_file=GT_SIGNATURES_FILE,
+        exposures_file=GT_EXPOSURES_FILE
+    shell:
+        "python src/sim_dmr_data.py -tf {input.topics_file} -ff {input.features_file}\
+        -l {input.lambda_file} -enm {input.n_mutation_distribution} -at {ACTIVE_SIGS}\
+        -n {wildcards.total_n_samples} -od {output.documents_file} -om {output.model_file} \
+        -omf {output.matrix_file} -os {output.signature_file} -oe {output.exposures_file} \
+        -ni {wildcards.iter_num}"
+
+# Rules for generating features for simulated datasets
+rule generate_BRCAness_data:
+    params:
+        seed=seed
+    output:
+        FEATURES_FILE
+    script:
+        "src/generate_clinical_data.py"
+
+rule generate_lambdas:
+    output:
+        LAMBDA_FILE
+    script:
+        "src/generate_handcrafted_lambdas.py"
+
+rule create_n_mutations_distribution_file:
+    input:
+        SBS96_COUNT_FILE
+    output:
+        N_MUTATION_DISTRIBUTION_FILE
+    script:
+        "src/create_n_mutations_empirical_distribution.py"
+
+# Rules for downloading and processing files
+rule download_cosmic_signatures:
+    params:
+        url='https://obj.umiacs.umd.edu/mutation-signature-explorer/signatures/COSMIC/processed/cosmic-signatures.SBS-96.tsv'
+    output:
+        COSMIC_SIGNATURES
+    shell:
+        'wget -O {output} {params.url}'
+
+rule download_cancer_type_counts:
+    params:
+        SBS96_COUNT_URL
+    output:
+        SBS96_COUNT_FILE
+    shell:
+        "wget -O {output} {params}"
