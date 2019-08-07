@@ -1,6 +1,0 @@
-name: 'SS'
-channels:
-  - bioconda
-  - conda-forge
-dependencies:
-  - bioconductor-somaticsignatures
