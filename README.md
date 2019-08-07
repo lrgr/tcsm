@@ -25,9 +25,9 @@ The main code for reproducing these experiments are in the `TCGA-HR-experiment` 
 ```bash
 cd TCGA-HR-experiment
 ```
-#### Reproducing Figure 2
+#### Reproducing Figure 3
 ```bash
-snakemake figure_2
+snakemake figure_3
 ```
 
 #### Reproducing Biallelic Inactivation Prediction
@@ -61,10 +61,10 @@ The main code for reproducing these experiments are in the `LUSC-SKCM` directory
 cd LUSC-SKCM
 ```
 
-#### Reproducing Figure 3
+#### Reproducing Figure 4
 
 ```bash
-snakemake figure_3
+snakemake figure_4
 ```
 
 #### Supplemental Figures S4-5
