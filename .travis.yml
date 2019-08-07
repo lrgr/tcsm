@@ -19,7 +19,7 @@ install:
 script:
   - cd TCGA-HR-experiment
   - snakemake -j 2 figure_3
-  - cd
+  - cd ..
 
 deploy:
   provider: pages
