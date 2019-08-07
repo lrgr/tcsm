@@ -14,7 +14,7 @@ install:
 
   # Replace dep1 dep2 ... with your dependencies
   - conda env create -f envs/environment.yml
-  - conda activate tcsm
+  - source activate tcsm
 
 script:
   - cd TCGA-HR-experiment
