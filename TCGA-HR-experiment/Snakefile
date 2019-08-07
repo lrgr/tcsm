@@ -75,7 +75,8 @@ EMP_COV_SIG_FILE=join(OUTPUT_DIR, 'stm-empirical-covariate-significance_{covaria
 NORMALIZED_EXPOSURES_FILE=join(OUTPUT_DIR, '{model}-normalized-exposures_{covariate_of_interest}_{covariates}_{K}_TCGA-{cancer_type}.tsv')
 VALIDATE_NORMALIZED_EXPOSURES_FILE=join(OUTPUT_DIR, '{model}-validate-normalized-exposures_{covariate_of_interest}_{covariates}_{K}_TCGA-{cancer_type}.tsv')
 
-FIGURE3 = join(OUTPUT_DIR, "figure3.pdf")
+FIGURE3_PDF = join(OUTPUT_DIR, "figs", "figure3.pdf")
+FIGURE3_PNG = join(OUTPUT_DIR, "figs", "figure3.png")
 
 seed="123456"
 
@@ -101,7 +102,8 @@ rule figure_3:
         likelihood_files=expand(STM_COMBINED_HELDOUT_LIKELIHOOD_FILE, cancer_type="BRCA", covariates=["BRCA1BRCA2RAD51C", "NULL"],K=K),
         ratio_files=expand(STM_HELDOUT_LIKELIHOOD_RATIO_FILE, covariates="BRCA1BRCA2RAD51C", covariate_of_interest="BRCA1BRCA2RAD51C", fold=FOLDS, K=K, cancer_type="BRCA"),
     output:
-        FIGURE3
+        FIGURE3_PDF,
+        FIGURE3_PNG
     script:
         "src/plot_figure3.py"
 # rule figure_2:

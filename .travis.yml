@@ -14,18 +14,18 @@ install:
 
   # Replace dep1 dep2 ... with your dependencies
   - conda env create -f envs/environment.yml
-  - conda activate tcsm
+  - source activate tcsm
 
 script:
   - cd TCGA-HR-experiment
   - snakemake figure_3
 
-# deploy:
-#   provider: pages
-#   skip-cleanup: true
-#   github-token: $GITHUB_TOKEN  # Set in travis-ci.org dashboard, marked secure
-#   keep-history: true
-#   local-dir: output/en/figs
-#   fqdn: multifactorial-immune-response.lrgr.io
-#   on:
-#     branch: master
+deploy:
+  provider: pages
+  skip-cleanup: true
+  github-token: $GITHUB_TOKEN  # Set in travis-ci.org dashboard, marked secure
+  keep-history: true
+  local-dir: TCGA-HR-experiment/output/figs
+  fqdn: tcsm.lrgr.io
+  on:
+    branch: master

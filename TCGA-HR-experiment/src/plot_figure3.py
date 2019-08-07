@@ -29,3 +29,4 @@ axs[2].text(-0.1, 1.1, "C", transform=axs[2].transAxes,
             size=20, weight='bold')
 plot_LST(df, axs[2])
 plt.savefig(snakemake.output[0])
+plt.savefig(snakemake.output[1])
