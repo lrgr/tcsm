@@ -20,12 +20,12 @@ script:
   - cd TCGA-HR-experiment
   - snakemake figure_3
 
-# deploy:
-#   provider: pages
-#   skip-cleanup: true
-#   github-token: $GITHUB_TOKEN  # Set in travis-ci.org dashboard, marked secure
-#   keep-history: true
-#   local-dir: output/en/figs
-#   fqdn: multifactorial-immune-response.lrgr.io
-#   on:
-#     branch: master
+deploy:
+  provider: pages
+  skip-cleanup: true
+  github-token: $GITHUB_TOKEN  # Set in travis-ci.org dashboard, marked secure
+  keep-history: true
+  local-dir: output/en/figs
+  fqdn: tcsm.lrgr.io
+  on:
+    branch: master
