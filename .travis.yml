@@ -25,7 +25,7 @@ deploy:
   skip-cleanup: true
   github-token: $GITHUB_TOKEN  # Set in travis-ci.org dashboard, marked secure
   keep-history: true
-  local-dir: output/en/figs
+  local-dir: TCGA-HR-experiment/output/figs
   fqdn: tcsm.lrgr.io
   on:
     branch: master
