@@ -19,6 +19,7 @@ install:
 script:
   - cd TCGA-HR-experiment
   - snakemake -j 2 figure_3
+  - cd
 
 deploy:
   provider: pages
@@ -26,6 +27,6 @@ deploy:
   github-token: $GITHUB_TOKEN  # Set in travis-ci.org dashboard, marked secure
   keep-history: true
   local-dir: TCGA-HR-experiment/output/figs
-  fqdn: tcsm.lrgr.io
+  # fqdn: tcsm.lrgr.io
   on:
     branch: master
