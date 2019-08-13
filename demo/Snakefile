@@ -1,0 +1,39 @@
+from os.path import join
+
+# directory names
+DATA_DIR="data"
+OUTPUT_DIR="processed"
+
+# example input files
+MUTATION_COUNT_FILE = join(DATA_DIR, "TCGA-BRCA_mutation_count.tsv")
+COVARIATE_FILE = join(DATA_DIR, "TCGA-BRCA_HRd_covariate.tsv")
+
+# example output files
+NORMALIZED_EXPOSURES_FILE=join(OUTPUT_DIR, 'normalized-exposures_{covariates}_{K}_TCGA-BRCA.tsv')
+EXOME_SIGNATURES_FILE=join(OUTPUT_DIR, 'exome-signatures_{covariates}_{K}_TCGA-BRCA.tsv')
+EFFECT_TABLE=join(OUTPUT_DIR, 'effect-table_{covariates}_{K}_TCGA-BRCA.tsv')
+# Model Component Files
+SIGMA_FILE=join(OUTPUT_DIR, 'sigma_{covariates}_{K}_TCGA-BRCA.tsv')
+GAMMA_FILE=join(OUTPUT_DIR, 'gamma_{covariates}_{K}_TCGA-BRCA.tsv')
+
+# parameters
+seed="123456"
+
+rule all:
+    input:
+        expand(GAMMA_FILE, covariates="HRd", K=5)
+
+rule run_TCSM:
+    params:
+        seed
+    input:
+        MUTATION_COUNT_FILE,
+        COVARIATE_FILE
+    output:
+        NORMALIZED_EXPOSURES_FILE,
+        EXOME_SIGNATURES_FILE,
+        EFFECT_TABLE,
+        SIGMA_FILE,
+        GAMMA_FILE
+    shell:
+        '../src/run_stm.R -m="{input[0]}" -c="{input[1]}" --exposures="{output[0]}" -s {params} -k {wildcards.K} --covariates {wildcards.covariates} --exposures="{output[0]}" --signatures="{output[1]}" --effect="{output[2]}" --sigma="{output[3]}" --gamma="{output[4]}"'

@@ -118,8 +118,8 @@ rule run_stm:
         STM_EFFECT_TABLE,
         SIGMA_FILE,
         GAMMA_FILE
-    script:
-        "src/run_stm.R"
+    shell:
+        'src/run_stm.R -m="{input[0]}" -c="{input[1]}" --exposures="{output[0]}" -s {params} -k {wildcards.K} --covariates {wildcards.covariates} --exposures="{output[0]}" --signatures="{output[1]}" --effect="{output[2]}" --sigma="{output[3]}" --gamma="{output[4]}"'
 
 # calculate the likelihood of test samples after learning the model on train samples
 rule stm_heldout_likelihood:
