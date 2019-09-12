@@ -106,7 +106,24 @@ rule stm_heldout_exposures_validate:
     script:
         "src/stm_heldout_exposures.R"
 
-rule run_stm:
+rule run_TCSM_without_covariates:
+    wildcard_constraints:
+        covariates="NULL"
+    params:
+        seed
+    input:
+        MC_FILE
+    output:
+        STM_ALL_NORMALIZED_EXPOSURES_FILE,
+        STM_EXOME_SIGNATURES_FILE,
+        SIGMA_FILE,
+    shell:
+        'src/run_stm.R "{input[0]}" {wildcards.K} -s {params} --exposures="{output[0]}" --signatures="{output[1]}" --sigma="{output[2]}"'
+
+
+rule run_TCSM_with_covariates:
+    wildcard_constraints:
+        covariates="(?!NULL).+"
     params:
         seed
     input:
@@ -119,7 +136,7 @@ rule run_stm:
         SIGMA_FILE,
         GAMMA_FILE
     shell:
-        'src/run_stm.R -m="{input[0]}" -c="{input[1]}" --exposures="{output[0]}" -s {params} -k {wildcards.K} --covariates {wildcards.covariates} --exposures="{output[0]}" --signatures="{output[1]}" --effect="{output[2]}" --sigma="{output[3]}" --gamma="{output[4]}"'
+        'src/run_stm.R "{input[0]}" {wildcards.K} -c="{input[1]}" -s {params} --covariates {wildcards.covariates} --exposures="{output[0]}" --signatures="{output[1]}" --effect="{output[2]}" --sigma="{output[3]}" --gamma="{output[4]}"'
 
 # calculate the likelihood of test samples after learning the model on train samples
 rule stm_heldout_likelihood:

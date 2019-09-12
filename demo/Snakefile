@@ -21,11 +21,25 @@ seed="123456"
 
 rule all:
     input:
-        expand(GAMMA_FILE, covariates="HRd", K=5)
+        expand(NORMALIZED_EXPOSURES_FILE, covariates="HRd", K=5),
+        expand(NORMALIZED_EXPOSURES_FILE, covariates="NULL", K=5)
 
-rule run_TCSM:
-    params:
-        seed
+rule run_TCSM_without_covariates:
+    wildcard_constraints:
+        covariates="NULL"
+    input:
+        MUTATION_COUNT_FILE
+    output:
+        NORMALIZED_EXPOSURES_FILE,
+        EXOME_SIGNATURES_FILE,
+        SIGMA_FILE,
+    shell:
+        '../src/run_stm.R "{input[0]}" {wildcards.K} --exposures="{output[0]}" --signatures="{output[1]}" --sigma="{output[2]}"'
+
+
+rule run_TCSM_with_covariates:
+    wildcard_constraints:
+        covariates="(?!NULL).+"
     input:
         MUTATION_COUNT_FILE,
         COVARIATE_FILE
@@ -36,4 +50,4 @@ rule run_TCSM:
         SIGMA_FILE,
         GAMMA_FILE
     shell:
-        '../src/run_stm.R -m="{input[0]}" -c="{input[1]}" --exposures="{output[0]}" -s {params} -k {wildcards.K} --covariates {wildcards.covariates} --exposures="{output[0]}" --signatures="{output[1]}" --effect="{output[2]}" --sigma="{output[3]}" --gamma="{output[4]}"'
+        '../src/run_stm.R "{input[0]}" {wildcards.K} -c="{input[1]}" --covariates {wildcards.covariates} --exposures="{output[0]}" --signatures="{output[1]}" --effect="{output[2]}" --sigma="{output[3]}" --gamma="{output[4]}"'
