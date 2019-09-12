@@ -74,8 +74,7 @@ rule plot_likelihoods:
 
 rule stm_heldout_exposures:
     params:
-        seed,
-        FUNCTION_FILE
+        seed
     input:
         TRAIN_MC_FILE,
         TEST_MC_FILE,
@@ -86,8 +85,8 @@ rule stm_heldout_exposures:
         STM_TEST_NORMALIZED_EXPOSURES_FILE,
         STM_TRAIN_SIGNATURES_FILE,
         STM_HELDOUT_LIKELIHOOD_RATIO_FILE,
-    script:
-        "src/stm_heldout_exposures.R"
+    shell:
+        '../src/stm_heldout_exposures.R "{input[0]}" "{input[1]}" "{input[2]}" "{input[3]}" {wildcards.K} {wildcards.covariates} {wildcards.covariate_of_interest} --seed={params.seed} --traine="{output[0]}" --teste="{output[1]}" --signature="{output[2]}" --heldout="{output[3]}"'
 
 rule stm_heldout_exposures_validate:
     params:
@@ -103,8 +102,8 @@ rule stm_heldout_exposures_validate:
         STM_VALIDATE_NORMALIZED_EXPOSURES_FILE,
         STM_SIGNATURES_FILE,
         STM_VALIDATE_LIKELIHOOD_RATIO_FILE,
-    script:
-        "src/stm_heldout_exposures.R"
+    shell:
+        '../src/stm_heldout_exposures.R "{input[0]}" "{input[1]}" "{input[2]}" "{input[3]}" {wildcards.K} {wildcards.covariates} {wildcards.covariate_of_interest} --seed={params.seed} --traine="{output[0]}" --teste="{output[1]}" --signature="{output[2]}" --heldout="{output[3]}"'
 
 rule run_TCSM_without_covariates:
     wildcard_constraints:

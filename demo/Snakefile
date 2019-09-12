@@ -1,8 +1,10 @@
-from os.path import join
+from os.path import join, dirname
 
 # directory names
 DATA_DIR="data"
 OUTPUT_DIR="processed"
+
+FUNCTION_FILE = join(dirname(srcdir("Snakefile")), "..", "src", "heldout_functions.R")
 
 # example input files
 MUTATION_COUNT_FILE = join(DATA_DIR, "TCGA-BRCA_mutation_count.tsv")
@@ -16,15 +18,23 @@ TRAIN_MC_FILE=join(OUTPUT_DIR, "TCGA-BRCA_mutation-count_train_{fold}.tsv")
 
 # example output files
 NORMALIZED_EXPOSURES_FILE=join(OUTPUT_DIR, 'normalized-exposures_{covariates}_{K}_TCGA-BRCA.tsv')
-EXOME_SIGNATURES_FILE=join(OUTPUT_DIR, 'exome-signatures_{covariates}_{K}_TCGA-BRCA.tsv')
+EXOME_SIGNATURES_FILE=join(OUTPUT_DIR, 'signatures_{covariates}_{K}_TCGA-BRCA.tsv')
 EFFECT_TABLE=join(OUTPUT_DIR, 'effect-table_{covariates}_{K}_TCGA-BRCA.tsv')
 # Model Component Files
 SIGMA_FILE=join(OUTPUT_DIR, 'sigma_{covariates}_{K}_TCGA-BRCA.tsv')
 GAMMA_FILE=join(OUTPUT_DIR, 'gamma_{covariates}_{K}_TCGA-BRCA.tsv')
-
+# heldout likelihood files
 HELDOUT_LIKELIHOOD_FILE=join(OUTPUT_DIR, 'heldout-likelihood_{covariates}_{K}_{fold}_TCGA-BRCA.tsv')
 COMBINED_HELDOUT_LIKELIHOOD_FILE=join(OUTPUT_DIR, 'combined-heldout-likelihood_{covariates}_TCGA-BRCA.tsv')
 HELDOUT_LIKELIHOOD_PLOT=join(OUTPUT_DIR, 'combined-heldout-likelihood-plot_{covariates}_TCGA-BRCA.png')
+
+# files for estimating exposures for heldout samples
+TRAIN_NORMALIZED_EXPOSURES_FILE=join(OUTPUT_DIR, 'train-normalized-exposures_{covariate_of_interest}_{covariates}_{K}_{fold}_TCGA-BRCA.tsv')
+TEST_NORMALIZED_EXPOSURES_FILE=join(OUTPUT_DIR, 'test-normalized-exposures_{covariate_of_interest}_{covariates}_{K}_{fold}_TCGA-BRCA.tsv')
+TRAIN_SIGNATURES_FILE=join(OUTPUT_DIR, 'train-signatures_{covariate_of_interest}_{covariates}_{K}_{fold}_TCGA-BRCA.tsv')
+HELDOUT_LIKELIHOOD_RATIO_FILE=join(OUTPUT_DIR, 'heldout-likelihood-ratio_{covariate_of_interest}_{covariates}_{K}_{fold}_TCGA-BRCA.tsv')
+
+
 # parameters
 seed="123456"
 N_FOLDS=5
@@ -35,7 +45,7 @@ rule all:
     input:
         #expand(TRAIN_MC_FILE, fold=FOLDS),
         #expand(NORMALIZED_EXPOSURES_FILE, covariates="HRd", K=5),
-        expand(HELDOUT_LIKELIHOOD_PLOT, covariates=["HRd", "NULL"]),
+        expand(HELDOUT_LIKELIHOOD_RATIO_FILE, covariates="HRd", K=5, covariate_of_interest="HRd", fold=0),
         # expand(HELDOUT_LIKELIHOOD_FILE, covariates="NULL", K=5, fold=0)
 
 # Rules for running TCSM with and without covariates
@@ -67,6 +77,23 @@ rule run_TCSM_with_covariates:
         GAMMA_FILE
     shell:
         '../src/run_stm.R "{input[0]}" {wildcards.K} -c="{input[1]}" --covariates {wildcards.covariates} --exposures="{output[0]}" --signatures="{output[1]}" --effect="{output[2]}" --sigma="{output[3]}" --gamma="{output[4]}"'
+
+# this rule only makes sense when covariates are used
+rule estimate_TCSM_exposures:
+    wildcard_constraints:
+        covariates="(?!NULL).+"
+    input:
+        TRAIN_MC_FILE,
+        TEST_MC_FILE,
+        TRAIN_FEATURE_FILE,
+        TEST_FEATURE_FILE
+    output:
+        TRAIN_NORMALIZED_EXPOSURES_FILE,
+        TEST_NORMALIZED_EXPOSURES_FILE,
+        TRAIN_SIGNATURES_FILE,
+        HELDOUT_LIKELIHOOD_RATIO_FILE,
+    shell:
+        '../src/stm_heldout_exposures.R "{input[0]}" "{input[1]}" "{input[2]}" "{input[3]}" {wildcards.K} {wildcards.covariates} {wildcards.covariate_of_interest} --traine="{output[0]}" --teste="{output[1]}" --signature="{output[2]}" --heldout="{output[3]}"'
 
 # Rules for estimating the number of signatures
 
