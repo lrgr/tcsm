@@ -139,7 +139,7 @@ rule run_TCSM_with_covariates:
         'src/run_stm.R "{input[0]}" {wildcards.K} -c="{input[1]}" -s {params} --covariates {wildcards.covariates} --exposures="{output[0]}" --signatures="{output[1]}" --effect="{output[2]}" --sigma="{output[3]}" --gamma="{output[4]}"'
 
 # calculate the likelihood of test samples after learning the model on train samples
-rule stm_heldout_likelihood:
+rule tcsm_heldout_likelihood:
     params:
         seed,
         FUNCTION_FILE
@@ -150,5 +150,5 @@ rule stm_heldout_likelihood:
         TEST_FEATURE_FILE
     output:
         STM_HELDOUT_LIKELIHOOD_FILE
-    script:
-        "src/stm_heldout_likelihood.R"
+    shell:
+        '../src/stm_heldout_likelihood.R "{input[0]}" "{input[1]}" {wildcards.K} --covariates={wildcards.covariates} --trainf="{input[2]}" --testf="{input[3]}" --heldout="{output[0]}"'

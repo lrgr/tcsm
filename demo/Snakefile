@@ -8,6 +8,12 @@ OUTPUT_DIR="processed"
 MUTATION_COUNT_FILE = join(DATA_DIR, "TCGA-BRCA_mutation_count.tsv")
 COVARIATE_FILE = join(DATA_DIR, "TCGA-BRCA_HRd_covariate.tsv")
 
+TRAIN_FEATURE_FILE=join(OUTPUT_DIR, "TCGA-BRCA_covariates_train_{fold}.tsv")
+TEST_FEATURE_FILE=join(OUTPUT_DIR, "TCGA-BRCA_covariates_test_{fold}.tsv")
+
+TEST_MC_FILE=join(OUTPUT_DIR, "TCGA-BRCA_mutation-count_test_{fold}.tsv")
+TRAIN_MC_FILE=join(OUTPUT_DIR, "TCGA-BRCA_mutation-count_train_{fold}.tsv")
+
 # example output files
 NORMALIZED_EXPOSURES_FILE=join(OUTPUT_DIR, 'normalized-exposures_{covariates}_{K}_TCGA-BRCA.tsv')
 EXOME_SIGNATURES_FILE=join(OUTPUT_DIR, 'exome-signatures_{covariates}_{K}_TCGA-BRCA.tsv')
@@ -16,13 +22,23 @@ EFFECT_TABLE=join(OUTPUT_DIR, 'effect-table_{covariates}_{K}_TCGA-BRCA.tsv')
 SIGMA_FILE=join(OUTPUT_DIR, 'sigma_{covariates}_{K}_TCGA-BRCA.tsv')
 GAMMA_FILE=join(OUTPUT_DIR, 'gamma_{covariates}_{K}_TCGA-BRCA.tsv')
 
+HELDOUT_LIKELIHOOD_FILE=join(OUTPUT_DIR, 'heldout-likelihood_{covariates}_{K}_{fold}_TCGA-BRCA.tsv')
+COMBINED_HELDOUT_LIKELIHOOD_FILE=join(OUTPUT_DIR, 'combined-heldout-likelihood_{covariates}_TCGA-BRCA.tsv')
+HELDOUT_LIKELIHOOD_PLOT=join(OUTPUT_DIR, 'combined-heldout-likelihood-plot_{covariates}_TCGA-BRCA.png')
 # parameters
 seed="123456"
+N_FOLDS=5
+FOLDS=range(0, N_FOLDS)
+K_RANGE=range(2, 8)
 
 rule all:
     input:
-        expand(NORMALIZED_EXPOSURES_FILE, covariates="HRd", K=5),
-        expand(NORMALIZED_EXPOSURES_FILE, covariates="NULL", K=5)
+        #expand(TRAIN_MC_FILE, fold=FOLDS),
+        #expand(NORMALIZED_EXPOSURES_FILE, covariates="HRd", K=5),
+        expand(HELDOUT_LIKELIHOOD_PLOT, covariates=["HRd", "NULL"]),
+        # expand(HELDOUT_LIKELIHOOD_FILE, covariates="NULL", K=5, fold=0)
+
+# Rules for running TCSM with and without covariates
 
 rule run_TCSM_without_covariates:
     wildcard_constraints:
@@ -51,3 +67,63 @@ rule run_TCSM_with_covariates:
         GAMMA_FILE
     shell:
         '../src/run_stm.R "{input[0]}" {wildcards.K} -c="{input[1]}" --covariates {wildcards.covariates} --exposures="{output[0]}" --signatures="{output[1]}" --effect="{output[2]}" --sigma="{output[3]}" --gamma="{output[4]}"'
+
+# Rules for estimating the number of signatures
+
+rule plot_likelihood:
+    input:
+        COMBINED_HELDOUT_LIKELIHOOD_FILE
+    output:
+        HELDOUT_LIKELIHOOD_PLOT
+    script:
+        "../src/plot_likelihoods.py"
+
+rule combine_heldout_likelihood_files:
+    input:
+        expand(HELDOUT_LIKELIHOOD_FILE, K = K_RANGE, fold=FOLDS, covariates="{covariates}")
+    output:
+        COMBINED_HELDOUT_LIKELIHOOD_FILE
+    script:
+        "../src/combine_heldout_likelihood_files.py"
+
+
+# calculate the likelihood of test samples after learning the model on train samples
+rule tcsm_covariates_heldout_likelihood:
+    wildcard_constraints:
+        covariates="(?!NULL).+"
+    input:
+        TRAIN_MC_FILE,
+        TEST_MC_FILE,
+        TRAIN_FEATURE_FILE,
+        TEST_FEATURE_FILE
+    output:
+        HELDOUT_LIKELIHOOD_FILE
+    shell:
+        '../src/stm_heldout_likelihood.R "{input[0]}" "{input[1]}" {wildcards.K} --covariates={wildcards.covariates} --trainf="{input[2]}" --testf="{input[3]}" --heldout="{output[0]}"'
+
+rule tcsm_no_covariates_heldout_likelihood:
+    wildcard_constraints:
+        covariates="NULL"
+    input:
+        TRAIN_MC_FILE,
+        TEST_MC_FILE
+    output:
+        HELDOUT_LIKELIHOOD_FILE
+    shell:
+        '../src/stm_heldout_likelihood.R "{input[0]}" "{input[1]}" {wildcards.K} --heldout="{output[0]}"'
+
+rule split_test_training_data:
+    input:
+        MUTATION_COUNT_FILE,
+        COVARIATE_FILE
+    params:
+        seed=seed,
+        n_folds=N_FOLDS,
+        feature="HRd"
+    output:
+        TEST_MC_FILE,
+        TRAIN_MC_FILE,
+        TEST_FEATURE_FILE,
+        TRAIN_FEATURE_FILE
+    script:
+        "../src/stratified_split_test_training_data.py"
