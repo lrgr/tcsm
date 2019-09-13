@@ -36,7 +36,7 @@ parser$add_argument("--seed", help="random seed", default=123456)
 parser$add_argument("--covariates", help="covariates (separated by +)", default="NULL")
 parser$add_argument("--trainf", help="feature input file for training")
 parser$add_argument("--testf", help="feature input file for test")
-parser$add_argument("--heldout", default="heldout-log-likelihood.tsv", help="feature input file for test")
+parser$add_argument("--heldout", default="heldout-log-likelihood.tsv", help="output file for heldout log-likelihood of test set")
 
 # get command line options, if help option encountered print help and exit,
 # otherwise if options not found on command line then set defaults,
