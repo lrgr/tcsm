@@ -74,8 +74,7 @@ rule plot_likelihoods:
 
 rule stm_heldout_exposures:
     params:
-        seed,
-        FUNCTION_FILE
+        seed
     input:
         TRAIN_MC_FILE,
         TEST_MC_FILE,
@@ -86,8 +85,8 @@ rule stm_heldout_exposures:
         STM_TEST_NORMALIZED_EXPOSURES_FILE,
         STM_TRAIN_SIGNATURES_FILE,
         STM_HELDOUT_LIKELIHOOD_RATIO_FILE,
-    script:
-        "src/stm_heldout_exposures.R"
+    shell:
+        '../src/stm_heldout_exposures.R "{input[0]}" "{input[1]}" "{input[2]}" "{input[3]}" {wildcards.K} {wildcards.covariates} {wildcards.covariate_of_interest} --seed={params[0]} --traine="{output[0]}" --teste="{output[1]}" --signature="{output[2]}" --heldout="{output[3]}"'
 
 rule stm_heldout_exposures_validate:
     params:
@@ -103,10 +102,27 @@ rule stm_heldout_exposures_validate:
         STM_VALIDATE_NORMALIZED_EXPOSURES_FILE,
         STM_SIGNATURES_FILE,
         STM_VALIDATE_LIKELIHOOD_RATIO_FILE,
-    script:
-        "src/stm_heldout_exposures.R"
+    shell:
+        '../src/stm_heldout_exposures.R "{input[0]}" "{input[1]}" "{input[2]}" "{input[3]}" {wildcards.K} {wildcards.covariates} {wildcards.covariate_of_interest} --seed={params[0]} --traine="{output[0]}" --teste="{output[1]}" --signature="{output[2]}" --heldout="{output[3]}"'
 
-rule run_stm:
+rule run_TCSM_without_covariates:
+    wildcard_constraints:
+        covariates="NULL"
+    params:
+        seed
+    input:
+        MC_FILE
+    output:
+        STM_ALL_NORMALIZED_EXPOSURES_FILE,
+        STM_EXOME_SIGNATURES_FILE,
+        SIGMA_FILE,
+    shell:
+        'src/run_stm.R "{input[0]}" {wildcards.K} -s {params} --exposures="{output[0]}" --signatures="{output[1]}" --sigma="{output[2]}"'
+
+
+rule run_TCSM_with_covariates:
+    wildcard_constraints:
+        covariates="(?!NULL).+"
     params:
         seed
     input:
@@ -118,11 +134,11 @@ rule run_stm:
         STM_EFFECT_TABLE,
         SIGMA_FILE,
         GAMMA_FILE
-    script:
-        "src/run_stm.R"
+    shell:
+        'src/run_stm.R "{input[0]}" {wildcards.K} -c="{input[1]}" -s {params} --covariates {wildcards.covariates} --exposures="{output[0]}" --signatures="{output[1]}" --effect="{output[2]}" --sigma="{output[3]}" --gamma="{output[4]}"'
 
 # calculate the likelihood of test samples after learning the model on train samples
-rule stm_heldout_likelihood:
+rule tcsm_heldout_likelihood:
     params:
         seed,
         FUNCTION_FILE
@@ -133,5 +149,5 @@ rule stm_heldout_likelihood:
         TEST_FEATURE_FILE
     output:
         STM_HELDOUT_LIKELIHOOD_FILE
-    script:
-        "src/stm_heldout_likelihood.R"
+    shell:
+        '../src/stm_heldout_likelihood.R "{input[0]}" "{input[1]}" {wildcards.K} --covariates={wildcards.covariates} --trainf="{input[2]}" --testf="{input[3]}" --heldout="{output[0]}"'
