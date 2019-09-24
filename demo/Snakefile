@@ -43,10 +43,13 @@ K_RANGE=range(2, 8)
 
 rule all:
     input:
-        #expand(TRAIN_MC_FILE, fold=FOLDS),
-        #expand(NORMALIZED_EXPOSURES_FILE, covariates="HRd", K=5),
-        expand(HELDOUT_LIKELIHOOD_RATIO_FILE, covariates="HRd", K=5, covariate_of_interest="HRd", fold=0),
-        # expand(HELDOUT_LIKELIHOOD_FILE, covariates="NULL", K=5, fold=0)
+        expand(HELDOUT_LIKELIHOOD_PLOT, covariates="HRd"), # plot of heldout likelihood
+        expand(NORMALIZED_EXPOSURES_FILE, covariates="HRd", K=5), # estimated exposures using HRd covariate with K=5
+        expand(EXOME_SIGNATURES_FILE, covariates="HRd", K=5), # estimated signatures using HRd covariate with K=5
+        expand(NORMALIZED_EXPOSURES_FILE, covariates="NULL", K=5), # estimated exposures with no covariates with K=5
+        expand(EXOME_SIGNATURES_FILE, covariates="NULL", K=5), # estimated signatures with no covariates with K=5
+        expand(TEST_NORMALIZED_EXPOSURES_FILE, covariates="HRd", K=5, fold=0), # estimated exposures of samples with heldout covariate when K=5
+
 
 # Rules for running TCSM with and without covariates
 
