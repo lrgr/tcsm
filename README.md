@@ -40,36 +40,17 @@ We have provided a demo (`demo`) to help users run TCSM on their own datasets. T
 
 ## Reproducing Key Results
 
+We use Travis CI to regenerate the key figures of the paper (Figure 3 and 4) when the master branch is updated.
+
 ### Homologous recombination repair (HR) deficiency in breast cancer
-
-We use Travis CI to regenerate Figure 3 every time the code base is updated.
-
-<!-- <img src='http://tcsm.lrgr.io/fig2.png'>
-
-**Figure 2**: Benchmark of TCSM with (red) and without (blue) covariates and NMF-based SomaticSignatures (green) on synthetic data. (A) Cosine similarity of inferred signatures (β) to hidden Signatures 3 and 5 using the true K = 4 averaged across 50 datasets, varying the number of samples. (B) Mean-squared error of the inferred exposures (θ) for the same datasets as in (A) -->
 
 <img src='http://lrgr.io/tcsm/figure3.png'>
 
 **Figure 3**: (A) Comparison of the log-likelihood of held-out samples across K = 2–10 between TCSM with the biallelic HR covariate (inactivations of BRCA1, BRCA2 or RAD51C) and TCSM without covariates. (B) The log-likelihood ratio (LLR) of samples with the biallelic HR covariate hidden where LLR>0 indicates the mutations of a sample are more likely under the biallelic HR covariate inactivation model. (C) After excluding tumors with known biallelic inactivations in BRCA1, BRCA2 or RAD51C, the plot of a tumor’s LLR against its LST count
 
 
-
-To reproduce this figure and other experiments related to HR-deficiency, first go to the `TCGA-HR-experiment` directory and then use snakemake.
-
-```bash
-cd TCGA-HR-experiment
-snakemake figure_3
-```
-
 ### Simultaneously learning signatures in melanomas and lung cancers
-The main code for reproducing these experiments are in the `LUSC-SKCM` directory. From the top directory, use the following command to move into the `LUSC-SKCM` directory.
 
-```bash
-cd LUSC-SKCM
-```
+<img src='http://lrgr.io/tcsm/figure4.png'>
 
-To reproduce Figure 4, use the following command.
-
-```bash
-snakemake figure_4
-```
+**Figure 4**: (A) The heldout log-likelihood plot used for model selection to obtain K = 4. (B) The log-likelihood ratio (LLR) of the cancer type covariate for tumors where LLR <0 means the mutations of the tumor are more likely under LUSC and LLR >0 means the mutations of the tumor are more likely under SKCM
