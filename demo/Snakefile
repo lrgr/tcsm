@@ -63,7 +63,7 @@ rule run_TCSM_without_covariates:
         EXOME_SIGNATURES_FILE,
         SIGMA_FILE,
     shell:
-        '../src/run_stm.R "{input[0]}" {wildcards.K} --exposures="{output[0]}" --signatures="{output[1]}" --sigma="{output[2]}"'
+        '../src/run_tcsm.R "{input[0]}" {wildcards.K} --exposures="{output[0]}" --signatures="{output[1]}" --sigma="{output[2]}"'
 
 
 rule run_TCSM_with_covariates:
@@ -79,7 +79,7 @@ rule run_TCSM_with_covariates:
         SIGMA_FILE,
         GAMMA_FILE
     shell:
-        '../src/run_stm.R "{input[0]}" {wildcards.K} -c="{input[1]}" --covariates {wildcards.covariates} --exposures="{output[0]}" --signatures="{output[1]}" --effect="{output[2]}" --sigma="{output[3]}" --gamma="{output[4]}"'
+        '../src/run_tcsm.R "{input[0]}" {wildcards.K} -c="{input[1]}" --covariates {wildcards.covariates} --exposures="{output[0]}" --signatures="{output[1]}" --effect="{output[2]}" --sigma="{output[3]}" --gamma="{output[4]}"'
 
 # this rule only makes sense when covariates are used
 rule estimate_TCSM_exposures:
@@ -96,7 +96,7 @@ rule estimate_TCSM_exposures:
         TRAIN_SIGNATURES_FILE,
         HELDOUT_LIKELIHOOD_RATIO_FILE,
     shell:
-        '../src/stm_heldout_exposures.R "{input[0]}" "{input[1]}" "{input[2]}" "{input[3]}" {wildcards.K} {wildcards.covariates} {wildcards.covariate_of_interest} --traine="{output[0]}" --teste="{output[1]}" --signature="{output[2]}" --heldout="{output[3]}"'
+        '../src/tcsm_heldout_exposures.R "{input[0]}" "{input[1]}" "{input[2]}" "{input[3]}" {wildcards.K} {wildcards.covariates} {wildcards.covariate_of_interest} --traine="{output[0]}" --teste="{output[1]}" --signature="{output[2]}" --heldout="{output[3]}"'
 
 # Rules for estimating the number of signatures
 
@@ -129,7 +129,7 @@ rule tcsm_covariates_heldout_likelihood:
     output:
         HELDOUT_LIKELIHOOD_FILE
     shell:
-        '../src/stm_heldout_likelihood.R "{input[0]}" "{input[1]}" {wildcards.K} --covariates={wildcards.covariates} --trainf="{input[2]}" --testf="{input[3]}" --heldout="{output[0]}"'
+        '../src/tcsm_heldout_likelihood.R "{input[0]}" "{input[1]}" {wildcards.K} --covariates={wildcards.covariates} --trainf="{input[2]}" --testf="{input[3]}" --heldout="{output[0]}"'
 
 rule tcsm_no_covariates_heldout_likelihood:
     wildcard_constraints:
@@ -140,7 +140,7 @@ rule tcsm_no_covariates_heldout_likelihood:
     output:
         HELDOUT_LIKELIHOOD_FILE
     shell:
-        '../src/stm_heldout_likelihood.R "{input[0]}" "{input[1]}" {wildcards.K} --heldout="{output[0]}"'
+        '../src/tcsm_heldout_likelihood.R "{input[0]}" "{input[1]}" {wildcards.K} --heldout="{output[0]}"'
 
 rule split_test_training_data:
     input:

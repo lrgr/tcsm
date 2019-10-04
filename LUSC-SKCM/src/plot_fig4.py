@@ -24,3 +24,4 @@ plot_likelihood_ratio(df, axs[1])
 axs[1].text(-0.1, 1.1, "B", transform=axs[1].transAxes,
             size=20, weight='bold')
 plt.savefig(snakemake.output[0])
+plt.savefig(snakemake.output[1])

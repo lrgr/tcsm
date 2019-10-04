@@ -70,7 +70,8 @@ SHUFFLED_GAMMA_FILE=join(OUTPUT_DIR, 'stm-gamma_{covariates}_{K}_TCGA-{cancer_ty
 SHUFFLED_COV_SIG_FILE=join(OUTPUT_DIR, 'stm-covariate-significance_{covariate_of_interest}_{covariates}_{K}_TCGA-{cancer_type}_{iter_num}.tsv')
 EMP_COV_SIG_FILE=join(OUTPUT_DIR, 'stm-empirical-covariate-significance_{covariate_of_interest}_{covariates}_{K}_TCGA-{cancer_type}.tsv')
 
-FIGURE4 = join(OUTPUT_DIR, "figure4.pdf")
+FIGURE4_PDF = join("..", "output", "figs", "figure4.pdf")
+FIGURE4_PNG = join("..", "output", "figs", "figure4.png")
 
 # Parameters
 seed="123456"
@@ -85,14 +86,15 @@ MAX_K=10
 K_RANGE=range(MIN_K, MAX_K+1, 1)
 K=4
 
-rule figure4:
+rule figure_4:
     params:
         SRC_DIR
     input:
         COMBINED_STM_HELDOUT_LIKELIHOOD_RATIO_FILE.format(covariate_of_interest="CancerType", covariates="CancerType", K=K, cancer_type="LUSCSKCM"),
         expand(STM_COMBINED_HELDOUT_LIKELIHOOD_FILE, covariates=["NULL", cancertype_covariates, all_covariates], cancer_type="LUSCSKCM")
     output:
-        FIGURE4
+        FIGURE4_PDF,
+        FIGURE4_PNG
     script:
         "src/plot_fig4.py"
 
